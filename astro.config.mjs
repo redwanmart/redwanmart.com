@@ -6,9 +6,7 @@ import cloudflare from '@astrojs/cloudflare';
 export default defineConfig({
   integrations: [react(), tailwind()],
   output: 'static',
-  adapter: cloudflare({
-    imageService: 'cloudflare',
-  }),
+  adapter: cloudflare(),
   vite: {
     ssr: {
       external: ['wasm-bindgen'],
