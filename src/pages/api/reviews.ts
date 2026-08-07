@@ -1,0 +1,194 @@
+import type { APIRoute } from 'astro';
+import { createCloudflareClient } from '../../lib/cloudflare';
+import { AuthManager, verifyJWT } from '../../lib/auth';
+
+/**
+ * GET /api/reviews?productId=...
+ * Fetch reviews for a product
+ */
+export const GET: APIRoute = async ({ request, locals }) => {
+  try {
+    const url = new URL(request.url);
+    const productId = url.searchParams.get('productId');
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 100);
+    const offset = parseInt(url.searchParams.get('offset') || '0');
+
+    if (!productId) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'productId parameter required' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Mock reviews data
+    const mockReviews = [
+      {
+        id: 'rev_1',
+        productId,
+        userId: 'user_cust_1',
+        userEmail: 'john@example.com',
+        userName: 'John Doe',
+        rating: 5,
+        title: 'Excellent product!',
+        comment: 'Very satisfied with the quality and performance.',
+        verified_purchase: true,
+        helpful_count: 42,
+        created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'rev_2',
+        productId,
+        userId: 'user_cust_2',
+        userEmail: 'jane@example.com',
+        userName: 'Jane Smith',
+        rating: 4,
+        title: 'Good value for money',
+        comment: 'Great product but shipping took a bit longer than expected.',
+        verified_purchase: true,
+        helpful_count: 28,
+        created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ];
+
+    const env = locals.runtime?.env || {};
+
+    let reviews = mockReviews;
+    if (env.DB) {
+      const client = createCloudflareClient(env);
+      const result = await client.queryDB(
+        `SELECT r.*, u.email as userEmail, u.first_name || ' ' || u.last_name as userName
+         FROM reviews r
+         JOIN users u ON r.user_id = u.id
+         WHERE r.product_id = ?
+         ORDER BY r.created_at DESC
+         LIMIT ? OFFSET ?`,
+        [productId, limit, offset]
+      );
+      reviews = result?.results || mockReviews;
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        productId,
+        reviews,
+        limit,
+        offset,
+      }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Cache-Control': 'public, max-age=300',
+        },
+      }
+    );
+  } catch (error) {
+    console.error('Reviews GET error:', error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: 'Failed to fetch reviews',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+  }
+};
+
+/**
+ * POST /api/reviews
+ * Create new review (Customer only)
+ */
+export const POST: APIRoute = async ({ request, locals }) => {
+  try {
+    // Verify JWT token
+    const jwtSecret = process.env.JWT_SECRET || 'dev-secret-key-min-32-chars-required';
+    const authManager = new AuthManager(jwtSecret);
+    const user = await verifyJWT(request, authManager);
+
+    if (!user) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized. Please log in.' }),
+        {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    const data = await request.json();
+    const { productId, rating, title, comment } = data;
+
+    // Validate input
+    if (!productId || !rating || !title) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Missing required fields: productId, rating, title'
+        }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate rating
+    const ratingNum = parseInt(rating);
+    if (ratingNum < 1 || ratingNum > 5) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Rating must be between 1 and 5' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const reviewId = `rev_${Date.now()}`;
+    const review = {
+      id: reviewId,
+      productId,
+      userId: user.userId,
+      rating: ratingNum,
+      title,
+      comment: comment || '',
+      verified_purchase: false, // Would check order history in production
+      created_at: new Date().toISOString(),
+    };
+
+    const env = locals.runtime?.env || {};
+    if (env.DB) {
+      const client = createCloudflareClient(env);
+      await client.executeDB(
+        `INSERT INTO reviews (id, product_id, user_id, rating, title, comment, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [review.id, productId, user.userId, ratingNum, title, comment || '', review.created_at]
+      );
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: 'Review created successfully',
+        review,
+      }),
+      {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  } catch (error) {
+    console.error('Review POST error:', error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: 'Failed to create review',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+  }
+};

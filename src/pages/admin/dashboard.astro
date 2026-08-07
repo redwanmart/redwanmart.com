@@ -1,0 +1,271 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const title = 'Admin Dashboard | Redwan Mart';
+const description = 'Manage products, media, and analytics';
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="min-h-screen bg-gray-100">
+    <!-- Admin Header -->
+    <div class="bg-white border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p class="text-gray-600 mt-1">Manage your store and products</p>
+        </div>
+
+        <div class="flex gap-4">
+          <button id="logoutBtn" class="bg-red-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-700 transition">
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div class="max-w-7xl mx-auto px-6 py-12">
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+        <!-- Total Products -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-600 text-sm font-semibold">Total Products</p>
+              <p class="text-3xl font-bold text-gray-900 mt-2">1,234</p>
+            </div>
+            <div class="text-4xl">📦</div>
+          </div>
+        </div>
+
+        <!-- Total Orders -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-600 text-sm font-semibold">Total Orders</p>
+              <p class="text-3xl font-bold text-gray-900 mt-2">456</p>
+            </div>
+            <div class="text-4xl">📊</div>
+          </div>
+        </div>
+
+        <!-- Revenue -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-600 text-sm font-semibold">Revenue</p>
+              <p class="text-3xl font-bold text-gray-900 mt-2">$45,230</p>
+            </div>
+            <div class="text-4xl">💰</div>
+          </div>
+        </div>
+
+        <!-- Pending Media -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-600 text-sm font-semibold">Pending Media</p>
+              <p class="text-3xl font-bold text-gray-900 mt-2">12</p>
+            </div>
+            <div class="text-4xl">🖼️</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="bg-white rounded-lg shadow mb-8">
+        <div class="flex border-b border-gray-200">
+          <button class="tab-btn active px-6 py-4 font-semibold text-red-600 border-b-2 border-red-600 transition" data-tab="products">
+            Products
+          </button>
+          <button class="tab-btn px-6 py-4 font-semibold text-gray-600 hover:text-gray-900 transition" data-tab="media">
+            Media Management
+          </button>
+          <button class="tab-btn px-6 py-4 font-semibold text-gray-600 hover:text-gray-900 transition" data-tab="analytics">
+            Analytics
+          </button>
+        </div>
+
+        <!-- Products Tab -->
+        <div id="tab-products" class="tab-content p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">Manage Products</h2>
+            <button class="bg-red-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-700 transition">
+              + Add Product
+            </button>
+          </div>
+
+          <!-- Product Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Product Name</th>
+                  <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Category</th>
+                  <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Price</th>
+                  <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Stock</th>
+                  <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Rating</th>
+                  <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-gray-200 hover:bg-gray-50">
+                  <td class="px-6 py-4 text-gray-900 font-semibold">Premium Wireless Headphones</td>
+                  <td class="px-6 py-4 text-gray-600">Audio</td>
+                  <td class="px-6 py-4 text-gray-900 font-bold">$199.99</td>
+                  <td class="px-6 py-4"><span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">45 in stock</span></td>
+                  <td class="px-6 py-4">
+                    <div class="flex gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <span key={i} class="text-yellow-400">{i < 4 ? '★' : '☆'}</span>
+                      ))}
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <button class="text-red-600 hover:text-red-700 font-semibold text-sm mr-4">Edit</button>
+                    <button class="text-red-600 hover:text-red-700 font-semibold text-sm">Delete</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Media Management Tab -->
+        <div id="tab-media" class="tab-content hidden p-6">
+          <div class="max-w-2xl mx-auto">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Upload Media</h2>
+
+            <!-- Upload Form -->
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
+              <div class="text-5xl mb-4">🖼️</div>
+              <h3 class="text-xl font-bold text-gray-900 mb-2">Upload Product Media</h3>
+              <p class="text-gray-600 mb-6">
+                Drag and drop images or videos, or click to select files
+              </p>
+
+              <input
+                type="file"
+                id="mediaInput"
+                accept="image/*,video/*"
+                class="hidden"
+                multiple
+              />
+
+              <button
+                onclick="document.getElementById('mediaInput').click()"
+                class="bg-red-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-red-700 transition"
+              >
+                Select Files
+              </button>
+
+              <p class="text-xs text-gray-500 mt-4">
+                Supported: JPG, PNG, WebP, MP4, WebM (Max 100MB)
+              </p>
+            </div>
+
+            <!-- Recent Uploads -->
+            <div class="mt-12">
+              <h3 class="text-lg font-bold text-gray-900 mb-4">Recent Uploads</h3>
+              <div class="space-y-3">
+                <div class="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
+                  <div class="flex items-center gap-4">
+                    <div class="text-4xl">🖼️</div>
+                    <div>
+                      <p class="font-semibold text-gray-900">headphones-001.jpg</p>
+                      <p class="text-sm text-gray-600">Uploaded 2 hours ago</p>
+                    </div>
+                  </div>
+                  <button class="text-red-600 hover:text-red-700">Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="tab-analytics" class="tab-content hidden p-6">
+          <h2 class="text-2xl font-bold text-gray-900 mb-6">Analytics Overview</h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Top Products -->
+            <div class="bg-gray-50 rounded-lg p-6">
+              <h3 class="text-lg font-bold text-gray-900 mb-4">Top Products</h3>
+              <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-700">Premium Wireless Headphones</span>
+                  <span class="font-bold text-red-600">245 views</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-700">Smartwatch Pro Series</span>
+                  <span class="font-bold text-red-600">189 views</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-700">Ultra HD Camera</span>
+                  <span class="font-bold text-red-600">156 views</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Traffic Sources -->
+            <div class="bg-gray-50 rounded-lg p-6">
+              <h3 class="text-lg font-bold text-gray-900 mb-4">Traffic Sources</h3>
+              <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-700">Direct</span>
+                  <span class="font-bold text-red-600">45%</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-700">Search</span>
+                  <span class="font-bold text-red-600">32%</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-700">Social</span>
+                  <span class="font-bold text-red-600">23%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        // Remove active class from all buttons
+        document.querySelectorAll('.tab-btn').forEach((b) => {
+          b.classList.remove('active', 'text-red-600', 'border-b-2', 'border-red-600');
+          b.classList.add('text-gray-600');
+        });
+
+        // Add active class to clicked button
+        btn.classList.add('active', 'text-red-600', 'border-b-2', 'border-red-600');
+        btn.classList.remove('text-gray-600');
+
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach((tab) => {
+          tab.classList.add('hidden');
+        });
+
+        // Show selected tab
+        const tabId = btn.getAttribute('data-tab');
+        document.getElementById(`tab-${tabId}`)?.classList.remove('hidden');
+      });
+    });
+
+    // Logout
+    document.getElementById('logoutBtn')?.addEventListener('click', () => {
+      localStorage.removeItem('authToken');
+      document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      window.location.href = '/admin/login';
+    });
+
+    // Check authentication on load
+    if (!localStorage.getItem('authToken') && !document.cookie.includes('token=')) {
+      window.location.href = '/admin/login';
+    }
+  </script>
+</BaseLayout>
