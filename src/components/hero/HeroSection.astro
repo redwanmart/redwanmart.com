@@ -69,13 +69,11 @@ const rest = products.filter((p) => p.id !== lead?.id).slice(0, 3);
               class="aspect-square w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
             />
           </picture>
-          <div class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 bg-gradient-to-t from-black/75 via-black/35 to-transparent p-6 pt-16">
-            <div>
-              <p class="text-xs font-bold uppercase tracking-[0.16em] text-white/70">{lead.badge ?? lead.series}</p>
-              <p class="mt-1 text-lg font-bold leading-tight text-white">{lead.name}</p>
-            </div>
-            <span class="shrink-0 rounded-full bg-white px-4 py-2 text-sm font-bold text-ink">{formatPrice(lead.price)}</span>
-          </div>
+          <!-- The product creative already carries its own name and spec bar,
+               so only the price is overlaid, clear of both. -->
+          <span class="absolute left-4 top-4 rounded-full bg-white/95 px-4 py-2 text-sm font-bold text-ink shadow-card backdrop-blur">
+            {formatPrice(lead.price)}
+          </span>
         </a>
       )}
 
