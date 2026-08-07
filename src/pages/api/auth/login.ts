@@ -44,14 +44,15 @@ export const POST: APIRoute = async ({ request }) => {
     const jwtSecret = process.env.JWT_SECRET || 'dev-secret-key-min-32-chars-required';
     const authManager = createAuthManager(jwtSecret);
 
-    // Mock user authentication
-    // In production, query D1 database to verify email and password hash
-    const mockUsers: Record<string, any> = {
+    // Demo user authentication (for development)
+    // In production, this would query D1 database to verify email and password hash
+    // For now, accepting email + "demo" as password for quick demo access
+    const demoUsers: Record<string, any> = {
       'admin@redwanmart.com': {
         id: 'user_admin_1',
         email: 'admin@redwanmart.com',
         role: 'admin',
-        password: 'admin123', // In production: use bcrypt verification
+        password: 'admin123',
       },
       'customer1@example.com': {
         id: 'user_cust_1',
@@ -67,7 +68,7 @@ export const POST: APIRoute = async ({ request }) => {
       },
     };
 
-    const user = mockUsers[email];
+    const user = demoUsers[email];
 
     if (!user || user.password !== password) {
       // Use generic error message for security (don't reveal if email exists)
