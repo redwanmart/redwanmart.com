@@ -15,12 +15,21 @@ binding = "CACHE"
 id = "93ae45003c104558b3f4ddaacca39963"
 preview_id = "93ae45003c104558b3f4ddaacca39963"
 
+# R2 Bucket Bindings (Media Assets)
+[[r2_buckets]]
+binding = "ASSETS_BUCKET"
+bucket_name = "redwanmart-assets"
+jurisdiction = "eu"
+
 # Environment Variables
 [vars]
 ENVIRONMENT = "development"
 APP_URL = "http://localhost:3000"
 ASSETS_URL = "https://assets.redwanmart.com"
 JWT_SECRET = "redwanmart_jwt_secret_demo_key_1234567890"
+
+# Secrets (set via wrangler secret put HIGGSFIELD_API_KEY)
+[secrets]
 
 [env.production]
 name = "redwanmart-api"
@@ -34,6 +43,11 @@ database_id = "f9a20d29-dd8c-4653-b303-e2f3e658a522"
 [[env.production.kv_namespaces]]
 binding = "CACHE"
 id = "93ae45003c104558b3f4ddaacca39963"
+
+[[env.production.r2_buckets]]
+binding = "ASSETS_BUCKET"
+bucket_name = "redwanmart-assets"
+jurisdiction = "eu"
 
 [env.production.vars]
 ENVIRONMENT = "production"

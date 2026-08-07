@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import HiggsfieldPanel from '../../components/admin/HiggsfieldPanel.astro';
 
 const title = 'Admin Dashboard | Redwan Mart';
 const description = 'Manage products, media, and analytics';
@@ -74,14 +75,17 @@ const description = 'Manage products, media, and analytics';
 
       <!-- Tab Navigation -->
       <div class="bg-white rounded-lg shadow mb-8">
-        <div class="flex border-b border-gray-200">
-          <button class="tab-btn active px-6 py-4 font-semibold text-red-600 border-b-2 border-red-600 transition" data-tab="products">
+        <div class="flex border-b border-gray-200 overflow-x-auto">
+          <button class="tab-btn active px-6 py-4 font-semibold text-red-600 border-b-2 border-red-600 transition whitespace-nowrap" data-tab="products">
             Products
           </button>
-          <button class="tab-btn px-6 py-4 font-semibold text-gray-600 hover:text-gray-900 transition" data-tab="media">
+          <button class="tab-btn px-6 py-4 font-semibold text-gray-600 hover:text-gray-900 transition whitespace-nowrap" data-tab="higgsfield">
+            AI Media Generator
+          </button>
+          <button class="tab-btn px-6 py-4 font-semibold text-gray-600 hover:text-gray-900 transition whitespace-nowrap" data-tab="media">
             Media Management
           </button>
-          <button class="tab-btn px-6 py-4 font-semibold text-gray-600 hover:text-gray-900 transition" data-tab="analytics">
+          <button class="tab-btn px-6 py-4 font-semibold text-gray-600 hover:text-gray-900 transition whitespace-nowrap" data-tab="analytics">
             Analytics
           </button>
         </div>
@@ -201,6 +205,11 @@ const description = 'Manage products, media, and analytics';
               <div id="formMessage" class="hidden p-4 rounded-lg text-sm font-semibold"></div>
             </form>
           </div>
+        </div>
+
+        <!-- Higgsfield AI Tab -->
+        <div id="tab-higgsfield" class="tab-content hidden p-6">
+          <HiggsfieldPanel />
         </div>
 
         <!-- Media Management Tab -->
