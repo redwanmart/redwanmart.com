@@ -16,44 +16,61 @@ export const GET: APIRoute = async ({ request, locals }) => {
     const category = url.searchParams.get('category');
     const featured = url.searchParams.get('featured') === 'true';
 
+    // Mock product data (always use in development)
+    const mockProducts: Record<string, any> = {
+      'prod_1': {
+        id: 'prod_1',
+        name: 'Premium Wireless Headphones',
+        slug: 'premium-wireless-headphones',
+        price: 199.99,
+        category: 'Audio',
+        image_url: 'https://assets.redwanmart.com/products/headphones.jpg',
+        rating: 4.8,
+        reviews_count: 245,
+        in_stock: true,
+        featured: true,
+      },
+      'prod_2': {
+        id: 'prod_2',
+        name: 'Smartwatch Pro Series',
+        slug: 'smartwatch-pro-series',
+        price: 349.99,
+        category: 'Wearables',
+        image_url: 'https://assets.redwanmart.com/products/smartwatch.jpg',
+        rating: 4.6,
+        reviews_count: 189,
+        in_stock: true,
+        featured: true,
+      },
+      'prod_3': {
+        id: 'prod_3',
+        name: 'Ultra HD Camera',
+        slug: 'ultra-hd-camera',
+        price: 899.99,
+        category: 'Photography',
+        image_url: 'https://assets.redwanmart.com/products/camera.jpg',
+        rating: 4.9,
+        reviews_count: 156,
+        in_stock: true,
+        featured: true,
+      },
+      'prod_16': {
+        id: 'prod_16',
+        name: 'Noise Cancelling Earbuds',
+        slug: 'noise-cancelling-earbuds',
+        price: 249.99,
+        category: 'Audio',
+        image_url: 'https://assets.redwanmart.com/products/earbuds.jpg',
+        rating: 4.8,
+        reviews_count: 456,
+        in_stock: true,
+        featured: true,
+      },
+    };
+
     // If ID is provided, fetch single product
     if (productId) {
-      const env = locals.runtime?.env || {};
-      let product = null;
-
-      if (env.DB) {
-        const client = createCloudflareClient(env);
-        product = await client.getProductById(productId) || await client.getProductBySlug(productId);
-      } else {
-        // Mock single product
-        const mockProducts: Record<string, any> = {
-          'prod_1': {
-            id: 'prod_1',
-            name: 'Premium Wireless Headphones',
-            slug: 'premium-wireless-headphones',
-            price: 199.99,
-            category: 'Audio',
-            image_url: 'https://assets.redwanmart.com/products/headphones.jpg',
-            rating: 4.8,
-            reviews_count: 245,
-            in_stock: true,
-            featured: true,
-          },
-          'premium-wireless-headphones': {
-            id: 'prod_1',
-            name: 'Premium Wireless Headphones',
-            slug: 'premium-wireless-headphones',
-            price: 199.99,
-            category: 'Audio',
-            image_url: 'https://assets.redwanmart.com/products/headphones.jpg',
-            rating: 4.8,
-            reviews_count: 245,
-            in_stock: true,
-            featured: true,
-          },
-        };
-        product = mockProducts[productId];
-      }
+      const product = mockProducts[productId] || mockProducts[productId.toLowerCase()];
 
       if (!product) {
         return new Response(
@@ -81,66 +98,25 @@ export const GET: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    // Initialize Cloudflare client with environment
-    const env = locals.runtime?.env || {};
-    if (!env.DB) {
-      // Return mock data when not in Cloudflare environment
-      const mockProducts = [
-        {
-          id: 'prod_1',
-          name: 'Premium Wireless Headphones',
-          slug: 'premium-wireless-headphones',
-          price: 199.99,
-          category: 'Audio',
-          image_url: 'https://assets.redwanmart.com/products/headphones.jpg',
-          rating: 4.8,
-          reviews_count: 245,
-          in_stock: true,
-          featured: true,
-        },
-        {
-          id: 'prod_2',
-          name: 'Smartwatch Pro Series',
-          slug: 'smartwatch-pro-series',
-          price: 349.99,
-          category: 'Wearables',
-          image_url: 'https://assets.redwanmart.com/products/smartwatch.jpg',
-          rating: 4.6,
-          reviews_count: 189,
-          in_stock: true,
-          featured: true,
-        },
-      ];
+    // Return list of products
+    const allProducts = Object.values(mockProducts);
+    let filteredProducts = allProducts;
 
-      return new Response(JSON.stringify({
-        success: true,
-        products: mockProducts,
-        total: mockProducts.length,
-        limit,
-        offset,
-      }), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    }
-
-    const client = createCloudflareClient(env);
-
-    let products;
+    // Apply filters
     if (featured) {
-      products = await client.getFeaturedProducts(limit);
-    } else if (category) {
-      products = await client.getProductsByCategory(category, limit);
-    } else {
-      products = await client.getProducts(limit, offset);
+      filteredProducts = filteredProducts.filter((p: any) => p.featured === true);
     }
+    if (category) {
+      filteredProducts = filteredProducts.filter((p: any) => p.category.toLowerCase() === category.toLowerCase());
+    }
+
+    // Apply pagination
+    const paginatedProducts = filteredProducts.slice(offset, offset + limit);
 
     return new Response(JSON.stringify({
       success: true,
-      products: products || [],
+      products: paginatedProducts,
+      total: filteredProducts.length,
       limit,
       offset,
     }), {

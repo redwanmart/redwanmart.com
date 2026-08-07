@@ -51,24 +51,19 @@ export const GET: APIRoute = async ({ request, locals }) => {
         description: 'Backpacks, laptop bags, and travel bags',
         display_order: 6,
       },
+      {
+        id: 'cat_7',
+        name: 'Toys & Collectibles',
+        slug: 'toys-collectibles',
+        description: 'Collectible action figures, building blocks, and toys',
+        display_order: 7,
+      },
     ];
-
-    const env = locals.runtime?.env || {};
-
-    let categories = mockCategories;
-    if (env.DB) {
-      // In production, query from database
-      const client = createCloudflareClient(env);
-      const result = await client.queryDB(
-        'SELECT * FROM categories ORDER BY display_order ASC'
-      );
-      categories = result?.results || mockCategories;
-    }
 
     return new Response(
       JSON.stringify({
         success: true,
-        categories,
+        categories: mockCategories,
       }),
       {
         status: 200,

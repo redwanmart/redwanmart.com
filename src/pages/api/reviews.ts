@@ -50,22 +50,8 @@ export const GET: APIRoute = async ({ request, locals }) => {
       },
     ];
 
-    const env = locals.runtime?.env || {};
-
+    // Always use mock reviews (development mode)
     let reviews = mockReviews;
-    if (env.DB) {
-      const client = createCloudflareClient(env);
-      const result = await client.queryDB(
-        `SELECT r.*, u.email as userEmail, u.first_name || ' ' || u.last_name as userName
-         FROM reviews r
-         JOIN users u ON r.user_id = u.id
-         WHERE r.product_id = ?
-         ORDER BY r.created_at DESC
-         LIMIT ? OFFSET ?`,
-        [productId, limit, offset]
-      );
-      reviews = result?.results || mockReviews;
-    }
 
     return new Response(
       JSON.stringify({
