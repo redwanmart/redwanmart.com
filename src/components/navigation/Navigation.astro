@@ -1,0 +1,56 @@
+---
+import { Image } from 'astro:assets';
+
+interface NavLink {
+  label: string;
+  href: string;
+}
+
+const navLinks: NavLink[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Products', href: '/products' },
+  { label: 'About', href: '/about' },
+  { label: 'Contact', href: '/contact' },
+];
+---
+
+<nav class="bg-rm-red text-white sticky top-0 z-50 shadow-lg">
+  <div class="container-app py-4">
+    <div class="flex items-center justify-between">
+      {/* Logo */}
+      <div class="flex items-center space-x-2">
+        <div class="w-10 h-10 bg-rm-gold rounded-lg flex items-center justify-center">
+          <span class="text-rm-red font-bold text-lg">RM</span>
+        </div>
+        <span class="font-heading font-bold text-xl hidden sm:inline">Redwan Mart</span>
+      </div>
+
+      {/* Desktop Navigation */}
+      <div class="hidden md:flex items-center space-x-8">
+        {navLinks.map((link) => (
+          <a
+            href={link.href}
+            class="hover:text-rm-gold transition-colors duration-200 font-medium"
+          >
+            {link.label}
+          </a>
+        ))}
+      </div>
+
+      {/* Action Buttons */}
+      <div class="flex items-center space-x-4">
+        <a
+          href="/admin"
+          class="btn btn-secondary text-sm"
+        >
+          Admin
+        </a>
+        <button class="md:hidden text-white">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>

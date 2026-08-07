@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Redwan Mart Custom Styles */
+
+:root {
+  --color-rm-red: #DC2626;
+  --color-rm-red-light: #EF4444;
+  --color-rm-red-dark: #991B1B;
+  --color-rm-gold: #FBBF24;
+  --color-rm-gold-light: #FCD34D;
+  --color-rm-gray: #1F2937;
+  --color-rm-gray-light: #F3F4F6;
+}
+
+/* Typography */
+html {
+  font-family: 'Inter', system-ui, sans-serif;
+  scroll-behavior: smooth;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+}
+
+body {
+  background-color: #ffffff;
+  color: var(--color-rm-gray);
+  line-height: 1.6;
+}
+
+/* Buttons */
+@layer components {
+  .btn {
+    @apply px-6 py-3 rounded-lg font-semibold transition-all duration-200 ease-in-out;
+  }
+
+  .btn-primary {
+    @apply btn bg-rm-red text-white hover:bg-rm-red-dark shadow-lg hover:shadow-xl;
+  }
+
+  .btn-secondary {
+    @apply btn bg-rm-gold text-rm-gray hover:bg-rm-gold-light;
+  }
+
+  .btn-outline {
+    @apply btn border-2 border-rm-red text-rm-red hover:bg-rm-red hover:text-white;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden;
+  }
+
+  .card-hover {
+    @apply card hover:scale-105 transition-transform duration-200;
+  }
+
+  /* Images */
+  img {
+    @apply max-w-full h-auto;
+  }
+
+  /* Links */
+  a {
+    @apply text-rm-red hover:text-rm-red-dark transition-colors duration-200;
+  }
+
+  /* Forms */
+  input, textarea, select {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-rm-red focus:ring-2 focus:ring-rm-red focus:ring-opacity-50;
+  }
+
+  label {
+    @apply block mb-2 font-semibold text-rm-gray;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-slide-in-up {
+  animation: slideInUp 0.5s ease-in-out;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  h1 {
+    @apply text-2xl;
+  }
+  h2 {
+    @apply text-xl;
+  }
+}
+
+/* Utility Classes */
+.container-app {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.flex-center {
+  @apply flex items-center justify-center;
+}
+
+.gradient-rm {
+  background: linear-gradient(135deg, var(--color-rm-red) 0%, var(--color-rm-gold) 100%);
+}

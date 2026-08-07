@@ -1,0 +1,19 @@
+name = "redwanmart-api"
+main = "functions/[[path]].ts"
+compatibility_date = "2024-12-16"
+compatibility_flags = ["nodejs_compat"]
+
+# Environment Variables
+[vars]
+ENVIRONMENT = "development"
+APP_URL = "http://localhost:3000"
+ASSETS_URL = "https://assets.redwanmart.com"
+
+[env.production]
+name = "redwanmart-api"
+route = "api.redwanmart.com/*"
+
+[env.production.vars]
+ENVIRONMENT = "production"
+APP_URL = "https://redwanmart.com"
+ASSETS_URL = "https://assets.redwanmart.com"

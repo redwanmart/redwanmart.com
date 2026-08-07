@@ -1,0 +1,79 @@
+---
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  category: string;
+  rating?: number;
+  reviews?: number;
+  inStock?: boolean;
+}
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props;
+const { id, name, price, image, category, rating = 4.5, reviews = 120, inStock = true } = product;
+---
+
+<div class="card-hover bg-white rounded-lg overflow-hidden">
+  {/* Image */}
+  <div class="relative aspect-square overflow-hidden bg-rm-gray-light">
+    <img
+      src={image}
+      alt={name}
+      class="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+      loading="lazy"
+    />
+    {!inStock && (
+      <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
+        <span class="text-white font-bold text-lg">Out of Stock</span>
+      </div>
+    )}
+    <span class="absolute top-4 right-4 bg-rm-gold text-rm-gray px-3 py-1 rounded-full text-sm font-semibold">
+      {category}
+    </span>
+  </div>
+
+  {/* Content */}
+  <div class="p-4">
+    <h3 class="font-heading font-bold text-lg mb-2 line-clamp-2 hover:text-rm-red transition">
+      <a href={`/products/${id}`}>{name}</a>
+    </h3>
+
+    {/* Rating */}
+    <div class="flex items-center mb-3">
+      <div class="flex text-rm-gold">
+        {[...Array(5)].map((_, i) => (
+          <svg
+            key={i}
+            class={`w-4 h-4 ${i < Math.floor(rating) ? 'fill-current' : 'fill-gray-300'}`}
+            viewBox="0 0 20 20"
+          >
+            <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+          </svg>
+        ))}
+      </div>
+      <span class="text-sm text-gray-600 ml-2">({reviews})</span>
+    </div>
+
+    {/* Price */}
+    <div class="flex items-center justify-between mb-4">
+      <span class="text-2xl font-bold text-rm-red">${price.toFixed(2)}</span>
+    </div>
+
+    {/* Button */}
+    <button
+      disabled={!inStock}
+      class={`w-full py-2 rounded-lg font-semibold transition-all ${
+        inStock
+          ? 'bg-rm-red text-white hover:bg-rm-red-dark'
+          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+      }`}
+    >
+      {inStock ? 'Add to Cart' : 'Unavailable'}
+    </button>
+  </div>
+</div>

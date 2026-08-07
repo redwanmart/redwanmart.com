@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /.well-known/
+
+Sitemap: https://redwanmart.com/sitemap.xml
