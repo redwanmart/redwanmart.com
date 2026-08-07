@@ -3,17 +3,40 @@ name = "redwanmart-api"
 compatibility_date = "2024-12-16"
 compatibility_flags = ["nodejs_compat"]
 
+# D1 Database Bindings
+[[d1_databases]]
+binding = "DB"
+database_name = "redwanmart-db"
+database_id = "f9a20d29-dd8c-4653-b303-e2f3e658a522"
+
+# KV Namespace Bindings
+[[kv_namespaces]]
+binding = "CACHE"
+id = "93ae45003c104558b3f4ddaacca39963"
+preview_id = "93ae45003c104558b3f4ddaacca39963"
+
 # Environment Variables
 [vars]
 ENVIRONMENT = "development"
 APP_URL = "http://localhost:3000"
 ASSETS_URL = "https://assets.redwanmart.com"
+JWT_SECRET = "redwanmart_jwt_secret_demo_key_1234567890"
 
 [env.production]
 name = "redwanmart-api"
 route = "api.redwanmart.com/*"
 
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "redwanmart-db"
+database_id = "f9a20d29-dd8c-4653-b303-e2f3e658a522"
+
+[[env.production.kv_namespaces]]
+binding = "CACHE"
+id = "93ae45003c104558b3f4ddaacca39963"
+
 [env.production.vars]
 ENVIRONMENT = "production"
 APP_URL = "https://redwanmart.com"
 ASSETS_URL = "https://assets.redwanmart.com"
+JWT_SECRET = "redwanmart_jwt_secret_demo_key_1234567890"

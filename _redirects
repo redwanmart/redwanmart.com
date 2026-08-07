@@ -1,0 +1,13 @@
+# Redirect trailing slashes
+/admin /admin/login 302
+
+# API routes handled by worker
+/api/* /:splat 200
+
+# Fallback to index for SPA routes
+/search /search/index.html 200
+/products/* /products/[id]/index.html 200
+/admin/* /admin/login/index.html 200
+
+# Rewrite to index for history API routing
+/* /index.html 200
