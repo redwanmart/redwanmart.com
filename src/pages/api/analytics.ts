@@ -91,9 +91,10 @@ export const GET: APIRoute = async ({ request, locals }) => {
   try {
     // Check for admin access
     const authHeader = request.headers.get('authorization');
-    const adminToken = process.env.ADMIN_ANALYTICS_TOKEN;
+    const adminToken = process.env.ADMIN_ANALYTICS_TOKEN || 'admin-token-secret';
+    const expectedToken = `Bearer ${adminToken}`;
 
-    if (!authHeader?.includes(adminToken || 'admin-token') && !adminToken) {
+    if (authHeader !== expectedToken) {
       return new Response(
         JSON.stringify({
           success: false,
