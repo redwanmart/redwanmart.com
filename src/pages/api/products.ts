@@ -13,120 +13,111 @@ export const GET: APIRoute = async ({ request, locals }) => {
     const productId = url.searchParams.get('id');
     const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 100);
     const offset = parseInt(url.searchParams.get('offset') || '0');
-    const category = url.searchParams.get('category');
+    const categoryParam = url.searchParams.get('category');
     const featured = url.searchParams.get('featured') === 'true';
 
-    // Mock product data (always use in development)
-    const mockProducts: Record<string, any> = {
-      'prod_1': {
-        id: 'prod_1',
-        name: 'Premium Wireless Headphones',
-        slug: 'premium-wireless-headphones',
-        price: 199.99,
-        category: 'Audio',
-        image_url: 'https://assets.redwanmart.com/products/headphones.jpg',
-        rating: 4.8,
-        reviews_count: 245,
-        in_stock: true,
-        featured: true,
-      },
-      'prod_2': {
-        id: 'prod_2',
-        name: 'Smartwatch Pro Series',
-        slug: 'smartwatch-pro-series',
-        price: 349.99,
-        category: 'Wearables',
-        image_url: 'https://assets.redwanmart.com/products/smartwatch.jpg',
-        rating: 4.6,
-        reviews_count: 189,
-        in_stock: true,
-        featured: true,
-      },
-      'prod_3': {
-        id: 'prod_3',
-        name: 'Ultra HD Camera',
-        slug: 'ultra-hd-camera',
-        price: 899.99,
-        category: 'Photography',
-        image_url: 'https://assets.redwanmart.com/products/camera.jpg',
-        rating: 4.9,
-        reviews_count: 156,
-        in_stock: true,
-        featured: true,
-      },
-      'prod_16': {
-        id: 'prod_16',
-        name: 'Noise Cancelling Earbuds',
-        slug: 'noise-cancelling-earbuds',
-        price: 249.99,
-        category: 'Audio',
-        image_url: 'https://assets.redwanmart.com/products/earbuds.jpg',
-        rating: 4.8,
-        reviews_count: 456,
-        in_stock: true,
-        featured: true,
-      },
-    };
+    const env = locals.runtime?.env || {};
 
-    // If ID is provided, fetch single product
+    // If ID is provided, fetch single product from D1
     if (productId) {
-      const product = mockProducts[productId] || mockProducts[productId.toLowerCase()];
+      try {
+        const client = createCloudflareClient(env);
+        const result = await client.queryDB(
+          'SELECT * FROM products WHERE id = ? OR slug = ?',
+          [productId, productId]
+        );
 
-      if (!product) {
+        if (!result?.results || result.results.length === 0) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'Product not found' }),
+            { status: 404, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
         return new Response(
-          JSON.stringify({ success: false, error: 'Product not found' }),
+          JSON.stringify({
+            success: true,
+            product: result.results[0],
+          }),
           {
-            status: 404,
-            headers: { 'Content-Type': 'application/json' }
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*',
+              'Cache-Control': 'public, max-age=600',
+            },
           }
         );
+      } catch (dbError) {
+        console.error('D1 query error:', dbError);
+        // Fallback to empty result on error
+        return new Response(
+          JSON.stringify({ success: false, error: 'Product not found' }),
+          { status: 404, headers: { 'Content-Type': 'application/json' } }
+        );
       }
+    }
+
+    // Fetch list of products from D1
+    try {
+      let query = 'SELECT * FROM products WHERE 1=1';
+      const params: any[] = [];
+
+      if (categoryParam) {
+        query += ' AND category = ?';
+        params.push(categoryParam);
+      }
+
+      query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+      params.push(limit, offset);
+
+      const client = createCloudflareClient(env);
+      const result = await client.queryDB(query, params);
+
+      const countResult = await client.queryDB(
+        'SELECT COUNT(*) as total FROM products' + (categoryParam ? ' WHERE category = ?' : ''),
+        categoryParam ? [categoryParam] : []
+      );
+
+      const total = countResult?.results?.[0]?.total || 0;
 
       return new Response(
         JSON.stringify({
           success: true,
-          product,
+          products: result?.results || [],
+          total,
+          limit,
+          offset,
         }),
         {
           status: 200,
           headers: {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
-            'Cache-Control': 'public, max-age=600',
+            'Cache-Control': 'public, max-age=300',
+          },
+        }
+      );
+    } catch (dbError) {
+      console.error('D1 query error:', dbError);
+      // Return empty results on error instead of failing
+      return new Response(
+        JSON.stringify({
+          success: true,
+          products: [],
+          total: 0,
+          limit,
+          offset,
+        }),
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
           },
         }
       );
     }
-
-    // Return list of products
-    const allProducts = Object.values(mockProducts);
-    let filteredProducts = allProducts;
-
-    // Apply filters
-    if (featured) {
-      filteredProducts = filteredProducts.filter((p: any) => p.featured === true);
-    }
-    if (category) {
-      filteredProducts = filteredProducts.filter((p: any) => p.category.toLowerCase() === category.toLowerCase());
-    }
-
-    // Apply pagination
-    const paginatedProducts = filteredProducts.slice(offset, offset + limit);
-
-    return new Response(JSON.stringify({
-      success: true,
-      products: paginatedProducts,
-      total: filteredProducts.length,
-      limit,
-      offset,
-    }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'public, max-age=300',
-      },
-    });
   } catch (error) {
     console.error('Products GET error:', error);
     return new Response(

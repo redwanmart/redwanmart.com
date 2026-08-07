@@ -48,69 +48,45 @@ export const GET: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    // Mock products for demonstration
-    const allProducts = [
-      {
-        id: 'prod_1',
-        name: 'Premium Wireless Headphones',
-        slug: 'premium-wireless-headphones',
-        description: 'High-quality wireless headphones with noise cancellation',
-        price: 199.99,
-        category: 'Audio',
-        rating: 4.8,
-        reviews_count: 245,
-        in_stock: true,
-        featured: true,
-      },
-      {
-        id: 'prod_2',
-        name: 'Smartwatch Pro Series',
-        slug: 'smartwatch-pro-series',
-        description: 'Advanced smartwatch with fitness tracking',
-        price: 349.99,
-        category: 'Wearables',
-        rating: 4.6,
-        reviews_count: 189,
-        in_stock: true,
-        featured: true,
-      },
-      {
-        id: 'prod_16',
-        name: 'Noise Cancelling Earbuds',
-        slug: 'noise-cancelling-earbuds',
-        description: 'True wireless earbuds with active noise cancellation',
-        price: 249.99,
-        category: 'Audio',
-        rating: 4.8,
-        reviews_count: 456,
-        in_stock: true,
-        featured: true,
-      },
-    ];
+    // Query products from D1 database
+    const env = locals.runtime?.env || {};
+    let results: any[] = [];
 
-    let results = allProducts;
+    try {
+      const client = createCloudflareClient(env);
 
-    // Text search
-    if (query) {
-      results = results.filter((p) =>
-        p.name.toLowerCase().includes(query) ||
-        p.description.toLowerCase().includes(query)
-      );
+      // Build dynamic SQL query with filters
+      let sqlQuery = 'SELECT * FROM products WHERE 1=1';
+      const params: any[] = [];
+
+      // Text search on title and description
+      if (query) {
+        sqlQuery += ` AND (title LIKE ? OR description LIKE ?)`;
+        const searchTerm = `%${query}%`;
+        params.push(searchTerm, searchTerm);
+      }
+
+      // Category filter
+      if (category) {
+        sqlQuery += ' AND category = ?';
+        params.push(category);
+      }
+
+      // Execute query
+      const result = await client.queryDB(sqlQuery, params);
+      results = result?.results || [];
+    } catch (dbError) {
+      console.error('D1 query error in search:', dbError);
+      // Continue with empty results on error
+      results = [];
     }
 
-    // Category filter
-    if (category) {
-      results = results.filter((p) =>
-        p.category.toLowerCase() === category.toLowerCase()
-      );
-    }
-
-    // Price filter
+    // Apply price filters (in-memory since we filtered by text/category in SQL)
     if (minPrice) {
-      results = results.filter((p) => p.price >= parseFloat(minPrice));
+      results = results.filter((p) => parseFloat(p.price) >= parseFloat(minPrice));
     }
     if (maxPrice) {
-      results = results.filter((p) => p.price <= parseFloat(maxPrice));
+      results = results.filter((p) => parseFloat(p.price) <= parseFloat(maxPrice));
     }
 
     // Sort
