@@ -1,231 +1,171 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProductCard from '../../components/product-grid/ProductCard.astro';
+import { products, relatedProducts, formatPrice, CURRENCY } from '../../data/products';
 
-export const prerender = false;
-
-const { id } = Astro.params;
-
-// Fetch product details
-let product = null;
-let reviews = [];
-
-try {
-  const baseUrl = Astro.site?.origin || 'https://redwanmart.com';
-  const productRes = await fetch(`${baseUrl}/api/products/${id}`);
-  const productData = await productRes.json();
-
-  if (productData.success) {
-    product = productData.product;
-
-    // Fetch reviews
-    const reviewsRes = await fetch(
-      `${baseUrl}/api/reviews?productId=${product.id || id}&limit=5`
-    );
-    const reviewsData = await reviewsRes.json();
-    if (reviewsData.success) {
-      reviews = reviewsData.reviews || [];
-    }
-  }
-} catch (error) {
-  console.error('Failed to fetch product:', error);
+export function getStaticPaths() {
+  return products.map((product) => ({
+    params: { id: product.id },
+    props: { product },
+  }));
 }
 
-// Fallback product data
-if (!product) {
-  product = {
-    id: id,
-    name: 'Premium Wireless Headphones',
-    slug: 'premium-wireless-headphones',
-    description: 'High-quality wireless headphones with noise cancellation and 30-hour battery life.',
-    price: 199.99,
-    category: 'Audio',
-    sku: 'HEAD-001',
-    image_url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&h=800&fit=crop',
-    rating: 4.8,
-    reviews_count: 245,
-    in_stock: true,
-    stock_quantity: 45,
-  };
-}
+const { product } = Astro.props;
+const related = relatedProducts(product.id, 3);
+const discount = product.compareAt
+  ? Math.round((1 - product.price / product.compareAt) * 100)
+  : 0;
 
-const title = `${product.name} | Redwan Mart`;
-const description = product.description || 'Premium product from Redwan Mart';
+const specs = [
+  ['Model', product.model],
+  ['Series', product.series],
+  ['Finished size', product.size],
+  ['Recommended age', product.ages],
+  ['Contents', `${product.pieces} + instruction booklet`],
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: product.name,
+  image: [new URL(product.image, 'https://redwanmart.com').href],
+  description: product.description,
+  sku: product.model,
+  brand: { '@type': 'Brand', name: 'Redwan Mart' },
+  aggregateRating: {
+    '@type': 'AggregateRating',
+    ratingValue: product.rating,
+    reviewCount: product.reviews,
+  },
+  offers: {
+    '@type': 'Offer',
+    priceCurrency: 'BDT',
+    price: product.price,
+    availability: product.inStock
+      ? 'https://schema.org/InStock'
+      : 'https://schema.org/OutOfStock',
+    url: new URL(`/products/${product.id}`, 'https://redwanmart.com').href,
+  },
+};
+
+const mailSubject = encodeURIComponent(`Order enquiry — ${product.name} (${product.model})`);
+const mailBody = encodeURIComponent(
+  `Hello Redwan Mart,\n\nI would like to order:\n\n` +
+  `Product: ${product.name}\nModel: ${product.model}\nPrice: ${CURRENCY}${product.price}\nQuantity: 1\n\n` +
+  `Delivery name:\nDelivery address:\nPhone number:\n\nThank you.`
+);
 ---
 
-<BaseLayout title={title} description={description}>
-  <!-- Breadcrumb -->
-  <div class="bg-gray-50 border-b border-gray-200">
-    <div class="max-w-6xl mx-auto px-6 py-4">
-      <div class="flex gap-2 text-gray-600 text-sm">
-        <a href="/" class="hover:text-red-600">Home</a>
-        <span>/</span>
-        <a href="/products" class="hover:text-red-600">Products</a>
-        <span>/</span>
-        <a href={`/products?category=${product.category}`} class="hover:text-red-600">{product.category}</a>
-        <span>/</span>
-        <span class="text-gray-900 font-semibold">{product.name}</span>
-      </div>
-    </div>
+<BaseLayout
+  title={`${product.name} (${product.model}) | Redwan Mart`}
+  description={product.description}
+  image={product.image}
+>
+  <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
+
+  <div class="container-app pt-8">
+    <nav aria-label="Breadcrumb" class="text-sm text-ink-muted">
+      <a href="/" class="hover:text-brand-700">Home</a>
+      <span class="mx-2 text-ink-faint">/</span>
+      <a href="/products" class="hover:text-brand-700">Shop</a>
+      <span class="mx-2 text-ink-faint">/</span>
+      <span class="font-semibold text-ink">{product.name}</span>
+    </nav>
   </div>
 
-  <!-- Product Detail -->
-  <div class="max-w-6xl mx-auto px-6 py-12">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
-      <!-- Product Image -->
-      <div class="flex items-center justify-center bg-gray-100 rounded-lg overflow-hidden">
+  <section class="container-app grid gap-12 py-10 lg:grid-cols-2 lg:gap-16 lg:py-14">
+    <div class="relative self-start overflow-hidden rounded-3xl bg-surface-sunken shadow-card ring-1 ring-black/5 lg:sticky lg:top-28">
+      <picture>
+        <source srcset={product.imageWebp} type="image/webp" />
         <img
-          src={product.image_url || '/placeholder-product.jpg'}
-          alt={product.name}
-          class="w-full h-full object-cover"
+          src={product.image} alt={`${product.name} — model ${product.model}`}
+          width="1200" height="1200" fetchpriority="high" decoding="async"
+          class="aspect-square w-full object-cover"
         />
-      </div>
-
-      <!-- Product Info -->
-      <div>
-        <div class="mb-6">
-          <p class="text-sm font-semibold text-red-600 uppercase mb-2">{product.category}</p>
-          <h1 class="text-4xl font-bold text-gray-900 mb-4">{product.name}</h1>
-
-          <!-- Rating -->
-          <div class="flex items-center gap-4 mb-6">
-            <div class="flex gap-1">
-              {[...Array(5)].map((_, i) => (
-                <span key={i} class="text-2xl">
-                  {i < Math.floor(product.rating || 0) ? '★' : '☆'}
-                </span>
-              ))}
-            </div>
-            <span class="text-gray-600">
-              {product.rating} ({product.reviews_count} reviews)
-            </span>
-          </div>
-
-          <!-- Price -->
-          <p class="text-4xl font-bold text-red-600 mb-2">${product.price.toFixed(2)}</p>
-
-          <!-- Stock Status -->
-          <p class={`text-sm font-semibold mb-6 ${product.in_stock ? 'text-green-600' : 'text-red-600'}`}>
-            {product.in_stock ? `✓ In Stock (${product.stock_quantity} available)` : '✗ Out of Stock'}
-          </p>
-
-          <!-- Description -->
-          <p class="text-gray-700 text-lg mb-8 leading-relaxed">{product.description}</p>
-
-          <!-- Actions -->
-          <div class="flex gap-4 mb-8">
-            <button
-              class="flex-1 bg-red-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={!product.in_stock}
-            >
-              Add to Cart
-            </button>
-            <button class="px-6 py-4 border-2 border-gray-300 rounded-lg font-semibold hover:border-red-600 transition">
-              ♡ Wishlist
-            </button>
-          </div>
-
-          <!-- Product Details -->
-          <div class="border-t border-b border-gray-200 py-6">
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <p class="text-sm text-gray-600 mb-1">SKU</p>
-                <p class="font-semibold text-gray-900">{product.sku}</p>
-              </div>
-              <div>
-                <p class="text-sm text-gray-600 mb-1">Category</p>
-                <p class="font-semibold text-gray-900">{product.category}</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Shipping Info -->
-          <div class="mt-6 space-y-3">
-            <div class="flex items-start gap-3">
-              <span class="text-2xl">🚚</span>
-              <div>
-                <p class="font-semibold text-gray-900">Free Shipping</p>
-                <p class="text-sm text-gray-600">On orders over $100</p>
-              </div>
-            </div>
-            <div class="flex items-start gap-3">
-              <span class="text-2xl">🛡️</span>
-              <div>
-                <p class="font-semibold text-gray-900">Secure Payment</p>
-                <p class="text-sm text-gray-600">100% encrypted transactions</p>
-              </div>
-            </div>
-            <div class="flex items-start gap-3">
-              <span class="text-2xl">♻️</span>
-              <div>
-                <p class="font-semibold text-gray-900">Easy Returns</p>
-                <p class="text-sm text-gray-600">30-day money-back guarantee</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      </picture>
+      {discount > 0 && (
+        <span class="absolute left-4 top-4 rounded-full bg-brand-600 px-3.5 py-1.5 text-sm font-bold text-white shadow-card">
+          Save {discount}%
+        </span>
+      )}
     </div>
 
-    <!-- Reviews Section -->
-    <div class="border-t border-gray-200 pt-12">
-      <h2 class="text-3xl font-bold mb-8">Customer Reviews</h2>
+    <div>
+      <p class="text-xs font-bold uppercase tracking-[0.16em] text-ink-faint">
+        {product.series} · Model {product.model}
+      </p>
+      <h1 class="mt-3 font-heading text-title">{product.name}</h1>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Review Stats -->
-        <div class="bg-gray-50 p-8 rounded-lg">
-          <div class="text-center mb-6">
-            <p class="text-5xl font-bold text-gray-900">{product.rating}</p>
-            <div class="flex justify-center gap-1 my-2">
-              {[...Array(5)].map((_, i) => (
-                <span key={i} class="text-2xl">
-                  {i < Math.floor(product.rating || 0) ? '★' : '☆'}
-                </span>
-              ))}
-            </div>
-            <p class="text-gray-600">Based on {product.reviews_count} reviews</p>
+      <div class="mt-4 flex flex-wrap items-center gap-3 text-sm">
+        <span class="flex items-center gap-1.5">
+          <span class="flex text-gold-400" aria-hidden="true">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <svg class:list={['h-4 w-4', i < Math.round(product.rating) ? 'fill-current' : 'fill-surface-line']} viewBox="0 0 20 20">
+                <path d="M10 1.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L1.5 7.7l5.9-.9L10 1.5z" />
+              </svg>
+            ))}
+          </span>
+          <span class="font-semibold text-ink">{product.rating.toFixed(1)}</span>
+          <span class="text-ink-muted">({product.reviews} reviews)</span>
+        </span>
+        {product.inStock ? (
+          <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> In stock
+          </span>
+        ) : (
+          <span class="rounded-full bg-surface-sunken px-3 py-1 text-xs font-bold text-ink-muted">Sold out</span>
+        )}
+      </div>
+
+      <div class="mt-6 flex items-baseline gap-3">
+        <span class="font-heading text-4xl font-bold text-ink">{formatPrice(product.price)}</span>
+        {product.compareAt && (
+          <span class="text-lg text-ink-faint line-through">{formatPrice(product.compareAt)}</span>
+        )}
+      </div>
+
+      <p class="mt-6 text-lg leading-relaxed text-ink-soft">{product.description}</p>
+
+      <ul class="mt-7 space-y-3">
+        {product.highlights.map((h) => (
+          <li class="flex items-start gap-3 text-[0.98rem] text-ink-soft">
+            <svg class="mt-0.5 h-5 w-5 shrink-0 text-brand-600" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            {h}
+          </li>
+        ))}
+      </ul>
+
+      <div class="mt-9 flex flex-wrap gap-3">
+        <a href={`mailto:redwanmartbd@gmail.com?subject=${mailSubject}&body=${mailBody}`} class="btn-primary flex-1 px-7 py-4 text-base sm:flex-none">
+          Order by email
+        </a>
+        <a href="/products" class="btn-outline px-7 py-4 text-base">Keep browsing</a>
+      </div>
+      <p class="mt-3 text-sm text-ink-muted">
+        Cash on delivery available · Dhaka 1–2 days, nationwide 3–5 days
+      </p>
+
+      <dl class="mt-10 divide-y divide-surface-line border-y border-surface-line">
+        {specs.map(([k, v]) => (
+          <div class="flex items-center justify-between gap-6 py-3.5">
+            <dt class="text-sm font-semibold text-ink-muted">{k}</dt>
+            <dd class="text-right text-sm font-semibold text-ink">{v}</dd>
           </div>
-        </div>
+        ))}
+      </dl>
+    </div>
+  </section>
 
-        <!-- Recent Reviews -->
-        <div class="lg:col-span-2">
-          {reviews.length > 0 ? (
-            <div class="space-y-6">
-              {reviews.map((review: any) => (
-                <div key={review.id} class="border-b border-gray-200 pb-6">
-                  <div class="flex items-start gap-4 mb-3">
-                    <div>
-                      <p class="font-semibold text-gray-900">{review.userName}</p>
-                      <div class="flex gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <span key={i} class="text-lg">
-                            {i < review.rating ? '★' : '☆'}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    {review.verified_purchase && (
-                      <span class="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded">
-                        Verified Purchase
-                      </span>
-                    )}
-                  </div>
-                  <p class="font-semibold text-gray-900 mb-2">{review.title}</p>
-                  <p class="text-gray-700 mb-3">{review.comment}</p>
-                  <p class="text-sm text-gray-500">
-                    {new Date(review.created_at).toLocaleDateString()} • {review.helpful_count} helpful
-                  </p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p class="text-gray-600 text-center py-8">No reviews yet. Be the first to review!</p>
-          )}
-
-          <button class="mt-6 w-full border-2 border-red-600 text-red-600 px-6 py-3 rounded-lg font-semibold hover:bg-red-50 transition">
-            Write a Review
-          </button>
+  {related.length > 0 && (
+    <section class="border-t border-surface-line bg-surface-soft py-16 lg:py-20">
+      <div class="container-app">
+        <h2 class="text-title">You might also like</h2>
+        <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {related.map((p) => <ProductCard product={p} />)}
         </div>
       </div>
-    </div>
-  </div>
+    </section>
+  )}
 </BaseLayout>

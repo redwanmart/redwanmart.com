@@ -2,169 +2,198 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import HeroSection from '../components/hero/HeroSection.astro';
 import ProductCard from '../components/product-grid/ProductCard.astro';
+import { products } from '../data/products';
 
-// Mock product data (will be replaced with database queries)
-const products = [
+const heroBlock = products.filter((p) => p.series === 'Hero Block');
+const spideyBlock = products.filter((p) => p.series === 'Spidey Block');
+
+const promises = [
   {
-    id: '1',
-    name: 'Premium Wireless Headphones',
-    price: 199.99,
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop',
-    category: 'Electronics',
-    rating: 4.8,
-    reviews: 245,
-    inStock: true,
+    title: 'Checked before it ships',
+    body: 'Every box is opened, counted and re-sealed in-house. If a brick is missing, it never reaches you.',
+    icon: 'check',
   },
   {
-    id: '2',
-    name: 'Smartwatch Pro Series',
-    price: 349.99,
-    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop',
-    category: 'Wearables',
-    rating: 4.6,
-    reviews: 189,
-    inStock: true,
+    title: 'Nationwide delivery',
+    body: 'Dhaka in 1–2 days, the rest of Bangladesh in 3–5. Cash on delivery available everywhere.',
+    icon: 'truck',
   },
   {
-    id: '3',
-    name: 'Ultra HD Camera',
-    price: 899.99,
-    image: 'https://images.unsplash.com/photo-1612198188060-c7c2a3b66eae?w=500&h=500&fit=crop',
-    category: 'Photography',
-    rating: 4.9,
-    reviews: 156,
-    inStock: true,
-  },
-  {
-    id: '4',
-    name: 'Portable Speaker',
-    price: 79.99,
-    image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&h=500&fit=crop',
-    category: 'Audio',
-    rating: 4.5,
-    reviews: 312,
-    inStock: true,
-  },
-  {
-    id: '5',
-    name: 'Wireless Charging Pad',
-    price: 39.99,
-    image: 'https://images.unsplash.com/photo-1591290619762-a3c5d2e45b58?w=500&h=500&fit=crop',
-    category: 'Accessories',
-    rating: 4.4,
-    reviews: 423,
-    inStock: true,
-  },
-  {
-    id: '6',
-    name: 'Premium Backpack',
-    price: 129.99,
-    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=500&fit=crop',
-    category: 'Bags',
-    rating: 4.7,
-    reviews: 278,
-    inStock: false,
+    title: 'Talk to a human',
+    body: 'Questions about a build, a missing piece or an order? You reach the founder, not a call centre.',
+    icon: 'chat',
   },
 ];
+
+const icons: Record<string, string> = {
+  check: 'M5 13l4 4L19 7',
+  truck: 'M3 7h11v8H3zM14 10h4l3 3v2h-7zM7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z',
+  chat: 'M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8z',
+};
 ---
 
-<BaseLayout title="Redwan Mart - Premium E-Commerce Experience">
-  {/* Hero Section */}
-  <HeroSection
-    title="Welcome to Redwan Mart"
-    subtitle="Discover premium products handpicked for quality and excellence. Shop the latest electronics, accessories, and lifestyle products."
-    ctaText="Shop Now"
-    ctaLink="/products"
-  />
+<BaseLayout
+  title="Redwan Mart — Micro-Brick Hero Figures in Bangladesh"
+  description="Premium micro-brick hero collectibles, hand-checked in Dhaka and shipped nationwide. Hero Block and Spidey Block figures, ages 14+."
+  image="/og-image.jpg"
+>
+  <HeroSection />
 
-  {/* Featured Products */}
-  <section id="featured" class="py-16 md:py-24 bg-white">
+  <!-- trust strip -->
+  <section class="border-y border-surface-line bg-white">
+    <div class="container-app grid gap-6 py-8 sm:grid-cols-2 lg:grid-cols-4">
+      {[
+        ['Authentic stock', 'Sourced and verified'],
+        ['Cash on delivery', 'Across Bangladesh'],
+        ['1–2 day Dhaka delivery', 'Dispatched same day'],
+        ['Built to display', 'Ages 14 and up'],
+      ].map(([title, sub]) => (
+        <div class="flex items-start gap-3">
+          <span class="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-600">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </span>
+          <div>
+            <p class="text-sm font-bold text-ink">{title}</p>
+            <p class="text-sm text-ink-muted">{sub}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- the full range -->
+  <section id="collection" class="py-20 lg:py-24">
     <div class="container-app">
-      <div class="text-center mb-12">
-        <h2 class="text-3xl md:text-4xl font-heading font-bold text-rm-gray mb-4">
-          Featured Products
-        </h2>
-        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-          Explore our carefully curated selection of premium products designed to enhance your lifestyle.
-        </p>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.slice(0, 6).map((product) => (
-          <ProductCard product={product} />
-        ))}
-      </div>
-
-      <div class="text-center mt-12">
-        <a href="/products" class="btn btn-primary inline-block">
-          View All Products
+      <div class="flex flex-wrap items-end justify-between gap-6">
+        <div class="max-w-xl">
+          <p class="eyebrow">The collection</p>
+          <h2 class="mt-3 text-title">Six figures. No filler.</h2>
+          <p class="mt-4 text-lg text-ink-soft">
+            The whole range, in stock and ready to ship. Each one arrives as a
+            sealed box of micro bricks and an instruction booklet.
+          </p>
+        </div>
+        <a href="/products" class="btn-outline">
+          View all
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6" />
+          </svg>
         </a>
       </div>
-    </div>
-  </section>
 
-  {/* Benefits Section */}
-  <section class="py-16 md:py-24 bg-rm-gray-light">
-    <div class="container-app">
-      <h2 class="text-3xl md:text-4xl font-heading font-bold text-rm-gray mb-12 text-center">
-        Why Choose Redwan Mart?
-      </h2>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Benefit 1 */}
-        <div class="card p-6 text-center">
-          <div class="w-16 h-16 bg-rm-red/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-8 h-8 text-rm-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-          </div>
-          <h3 class="text-xl font-bold text-rm-gray mb-2">Premium Quality</h3>
-          <p class="text-gray-600">
-            All our products are carefully selected and tested to ensure the highest quality standards.
-          </p>
-        </div>
-
-        {/* Benefit 2 */}
-        <div class="card p-6 text-center">
-          <div class="w-16 h-16 bg-rm-gold/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-8 h-8 text-rm-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-          </div>
-          <h3 class="text-xl font-bold text-rm-gray mb-2">Fast Shipping</h3>
-          <p class="text-gray-600">
-            Quick and reliable delivery to your doorstep. Track your order in real-time.
-          </p>
-        </div>
-
-        {/* Benefit 3 */}
-        <div class="card p-6 text-center">
-          <div class="w-16 h-16 bg-rm-red/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-8 h-8 text-rm-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.172l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path>
-            </svg>
-          </div>
-          <h3 class="text-xl font-bold text-rm-gray mb-2">24/7 Support</h3>
-          <p class="text-gray-600">
-            Our dedicated support team is ready to help you anytime, anywhere.
-          </p>
-        </div>
+      <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {products.map((p, i) => <ProductCard product={p} priority={i < 3} />)}
       </div>
     </div>
   </section>
 
-  {/* Call to Action */}
-  <section class="py-16 md:py-24 bg-gradient-rm text-white">
-    <div class="container-app text-center">
-      <h2 class="text-3xl md:text-4xl font-heading font-bold mb-6">
-        Ready to Experience Excellence?
-      </h2>
-      <p class="text-lg mb-8 max-w-2xl mx-auto">
-        Join thousands of satisfied customers who trust Redwan Mart for their premium product needs.
-      </p>
-      <a href="/products" class="btn btn-secondary inline-block">
-        Start Shopping Today
-      </a>
+  <!-- series split -->
+  <section class="pb-20 lg:pb-24">
+    <div class="container-app grid gap-6 md:grid-cols-2">
+      {[
+        { name: 'Hero Block', count: heroBlock.length, img: heroBlock[0], copy: 'Caped, armoured and masked. The core line — four figures, 6 cm tall, built to hold a pose.' },
+        { name: 'Spidey Block', count: spideyBlock.length, img: spideyBlock[0], copy: 'The web-slinger in two scales. Crisp lens work and a colourway you can spot from the doorway.' },
+      ].map((s) => (
+        <a
+          href={`/products?series=${encodeURIComponent(s.name)}`}
+          class="group relative overflow-hidden rounded-3xl bg-ink text-white shadow-card transition hover:shadow-lift"
+        >
+          <div class="absolute inset-0">
+            {s.img && (
+              <img src={s.img.imageWebp} alt="" width="1200" height="1200" loading="lazy" decoding="async"
+                   class="h-full w-full object-cover opacity-40 transition duration-700 group-hover:scale-105 group-hover:opacity-50" />
+            )}
+            <div class="absolute inset-0 bg-gradient-to-r from-ink via-ink/80 to-ink/20"></div>
+          </div>
+          <div class="relative flex min-h-[15rem] flex-col justify-end p-8">
+            <p class="text-xs font-bold uppercase tracking-[0.16em] text-gold-400">{s.count} figures</p>
+            <h3 class="mt-2 font-heading text-3xl text-white">{s.name}</h3>
+            <p class="mt-3 max-w-sm text-[0.95rem] leading-relaxed text-white/70">{s.copy}</p>
+            <span class="mt-5 inline-flex items-center gap-2 text-sm font-bold text-white">
+              Browse series
+              <svg class="h-4 w-4 transition group-hover:translate-x-1" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6" />
+              </svg>
+            </span>
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <!-- promises -->
+  <section class="border-y border-surface-line bg-surface-soft py-20 lg:py-24">
+    <div class="container-app">
+      <div class="max-w-xl">
+        <p class="eyebrow">Why Redwan Mart</p>
+        <h2 class="mt-3 text-title">A small shop that actually answers.</h2>
+      </div>
+      <div class="mt-12 grid gap-6 md:grid-cols-3">
+        {promises.map((p) => (
+          <div class="card p-7">
+            <span class="grid h-11 w-11 place-items-center rounded-2xl bg-brand-600 text-white">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d={icons[p.icon]} />
+              </svg>
+            </span>
+            <h3 class="mt-5 text-lg font-bold text-ink">{p.title}</h3>
+            <p class="mt-2.5 text-[0.95rem] leading-relaxed text-ink-soft">{p.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- founder strip -->
+  <section class="py-20 lg:py-24">
+    <div class="container-app grid items-center gap-12 lg:grid-cols-[0.8fr_1fr]">
+      <div class="relative mx-auto w-full max-w-sm">
+        <div class="absolute -inset-3 -rotate-2 rounded-3xl bg-gold-200/70"></div>
+        <picture>
+          <source srcset="/founder.webp" type="image/webp" />
+          <img
+            src="/founder.jpg" alt="S. M. Redwan Ahmed, founder of Redwan Mart"
+            width="1000" height="1250" loading="lazy" decoding="async"
+            class="relative w-full rounded-3xl object-cover shadow-lift"
+          />
+        </picture>
+      </div>
+      <div>
+        <p class="eyebrow">The founder</p>
+        <h2 class="mt-3 text-title">Started by one student in Dhaka.</h2>
+        <p class="mt-5 text-lg leading-relaxed text-ink-soft">
+          Redwan Mart is run by S. M. Redwan Ahmed, a BBA student at Bangladesh
+          University of Business and Technology. He picks the stock, checks the
+          boxes and answers the messages — which is why the range is small and
+          the quality bar is not.
+        </p>
+        <blockquote class="mt-7 border-l-4 border-brand-600 pl-5 text-lg font-medium italic text-ink">
+          “I would rather sell six things properly than sixty things badly.”
+        </blockquote>
+        <a href="/about" class="btn-outline mt-8">Read the full story</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="container-app pb-4">
+    <div class="relative overflow-hidden rounded-3xl gradient-ink px-8 py-16 text-center sm:px-16">
+      <div class="absolute inset-0 bg-dotgrid opacity-60" aria-hidden="true"></div>
+      <div class="relative mx-auto max-w-2xl">
+        <img src="/brand/mark.png" alt="" width="512" height="512" loading="lazy" class="mx-auto h-14 w-14" aria-hidden="true" />
+        <h2 class="mt-6 font-heading text-3xl text-white sm:text-4xl">Pick your first build.</h2>
+        <p class="mt-4 text-lg text-white/70">
+          Six figures, all in stock, all shipped from Dhaka with cash on delivery.
+        </p>
+        <div class="mt-9 flex flex-wrap justify-center gap-3">
+          <a href="/products" class="btn-secondary px-7 py-3.5 text-base">Shop the collection</a>
+          <a href="mailto:redwanmartbd@gmail.com" class="btn px-7 py-3.5 text-base text-white ring-1 ring-inset ring-white/25 hover:bg-white/10">
+            Message us
+          </a>
+        </div>
+      </div>
     </div>
   </section>
 </BaseLayout>

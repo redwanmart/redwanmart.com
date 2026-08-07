@@ -1,56 +1,125 @@
 ---
-import { Image } from 'astro:assets';
-
-interface NavLink {
-  label: string;
-  href: string;
-}
-
-const navLinks: NavLink[] = [
-  { label: 'Home', href: '/' },
-  { label: 'Products', href: '/products' },
+const links = [
+  { label: 'Shop', href: '/products' },
+  { label: 'Hero Block', href: '/products?series=Hero+Block' },
+  { label: 'Spidey Block', href: '/products?series=Spidey+Block' },
   { label: 'About', href: '/about' },
-  { label: 'Contact', href: '/contact' },
 ];
 
-// About page exists - no changes needed
+const path = Astro.url.pathname;
+
+// Links that carry a query string (the series filters) all share the /products
+// base, so matching on pathname alone would light every one of them up at once.
+// Those are left to the client; only plain links get a server-rendered state.
+const isActive = (href: string) => {
+  if (href.includes('?')) return false;
+  return href === '/' ? path === '/' : path.startsWith(href);
+};
 ---
 
-<nav class="bg-rm-red text-white sticky top-0 z-50 shadow-lg">
-  <div class="container-app py-4">
-    <div class="flex items-center justify-between">
-      {/* Logo */}
-      <a href="/" class="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-        <img src="/logo.svg" alt="Redwan Mart Logo" class="w-10 h-10" />
-        <span class="font-heading font-bold text-xl hidden sm:inline">Redwan Mart</span>
-      </a>
+<div class="bg-ink text-white/90">
+  <div class="container-app flex h-9 items-center justify-center gap-2 text-[0.78rem] font-medium sm:justify-between">
+    <p class="flex items-center gap-2">
+      <span class="inline-block h-1.5 w-1.5 rounded-full bg-gold-400"></span>
+      Free delivery inside Dhaka on orders over ৳1,500
+    </p>
+    <p class="hidden sm:block text-white/60">Authentic stock · Cash on delivery</p>
+  </div>
+</div>
 
-      {/* Desktop Navigation */}
-      <div class="hidden md:flex items-center space-x-8">
-        {navLinks.map((link) => (
+<header id="site-header" class="sticky top-0 z-50 border-b border-surface-line bg-white/85 backdrop-blur-md transition-shadow">
+  <nav class="container-app flex h-[4.5rem] items-center gap-6" aria-label="Primary">
+    <a href="/" class="shrink-0" aria-label="Redwan Mart — home">
+      <img
+        src="/brand/lockup-red.png"
+        alt="Redwan Mart"
+        width="1154" height="221"
+        class="h-9 w-auto sm:h-10"
+        fetchpriority="high"
+      />
+    </a>
+
+    <ul class="ml-2 hidden items-center gap-1 lg:flex">
+      {links.map((l) => (
+        <li>
           <a
-            href={link.href}
-            class="hover:text-rm-gold transition-colors duration-200 font-medium"
+            href={l.href}
+            aria-current={isActive(l.href) ? 'page' : undefined}
+            class:list={[
+              'rounded-full px-4 py-2 text-[0.94rem] font-semibold transition',
+              isActive(l.href)
+                ? 'bg-brand-50 text-brand-700'
+                : 'text-ink-soft hover:bg-surface-sunken hover:text-ink',
+            ]}
           >
-            {link.label}
+            {l.label}
           </a>
-        ))}
-      </div>
+        </li>
+      ))}
+    </ul>
 
-      {/* Action Buttons */}
-      <div class="flex items-center space-x-4">
-        <a
-          href="/admin"
-          class="btn btn-secondary text-sm"
-        >
-          Admin
-        </a>
-        <button class="md:hidden text-white">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+    <div class="ml-auto flex items-center gap-2">
+      <form action="/search" method="get" class="hidden md:block">
+        <label for="nav-search" class="sr-only">Search products</label>
+        <div class="relative">
+          <svg class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-faint" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" stroke-linecap="round" />
           </svg>
-        </button>
-      </div>
+          <input
+            id="nav-search" type="search" name="q" placeholder="Search figures…"
+            class="h-10 w-44 rounded-full border border-surface-line bg-surface-soft pl-10 pr-4 text-sm text-ink placeholder:text-ink-faint transition focus:w-56 focus:border-brand-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-600/15 xl:w-56 xl:focus:w-64"
+          />
+        </div>
+      </form>
+
+      <a href="/products" class="btn-primary hidden h-10 px-5 sm:inline-flex">Shop now</a>
+
+      <button
+        id="nav-toggle" type="button"
+        class="inline-flex h-10 w-10 items-center justify-center rounded-full text-ink hover:bg-surface-sunken lg:hidden"
+        aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"
+      >
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16" />
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <div id="mobile-menu" hidden class="border-t border-surface-line bg-white lg:hidden">
+    <div class="container-app space-y-1 py-4">
+      <form action="/search" method="get" class="mb-3">
+        <label for="m-search" class="sr-only">Search products</label>
+        <input id="m-search" type="search" name="q" placeholder="Search figures…" class="field" />
+      </form>
+      {links.map((l) => (
+        <a href={l.href} class="block rounded-xl px-4 py-3 text-base font-semibold text-ink hover:bg-surface-sunken">
+          {l.label}
+        </a>
+      ))}
+      <a href="/products" class="btn-primary mt-2 w-full">Shop now</a>
     </div>
   </div>
-</nav>
+</header>
+
+<script is:inline>
+  (() => {
+    const btn = document.getElementById('nav-toggle');
+    const menu = document.getElementById('mobile-menu');
+    const header = document.getElementById('site-header');
+    if (btn && menu) {
+      btn.addEventListener('click', () => {
+        const open = menu.hasAttribute('hidden');
+        if (open) menu.removeAttribute('hidden');
+        else menu.setAttribute('hidden', '');
+        btn.setAttribute('aria-expanded', String(open));
+        btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+      });
+    }
+    if (header) {
+      const onScroll = () => header.classList.toggle('shadow-card', window.scrollY > 4);
+      onScroll();
+      addEventListener('scroll', onScroll, { passive: true });
+    }
+  })();
+</script>

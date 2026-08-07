@@ -4,11 +4,10 @@ import tailwind from '@astrojs/tailwind';
 import cloudflare from '@astrojs/cloudflare';
 
 export default defineConfig({
+  site: 'https://redwanmart.com',
   integrations: [react(), tailwind()],
   output: 'static',
-  adapter: cloudflare({
-    imageService: 'cloudflare',
-  }),
+  adapter: cloudflare(),
   vite: {
     ssr: {
       external: ['wasm-bindgen'],

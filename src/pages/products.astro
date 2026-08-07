@@ -1,154 +1,96 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ProductCard from '../components/product-grid/ProductCard.astro';
-
-// Mock product data (will be replaced with database queries)
-const allProducts = [
-  {
-    id: '1',
-    name: 'Premium Wireless Headphones',
-    price: 199.99,
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop',
-    category: 'Electronics',
-    rating: 4.8,
-    reviews: 245,
-    inStock: true,
-  },
-  {
-    id: '2',
-    name: 'Smartwatch Pro Series',
-    price: 349.99,
-    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop',
-    category: 'Wearables',
-    rating: 4.6,
-    reviews: 189,
-    inStock: true,
-  },
-  {
-    id: '3',
-    name: 'Ultra HD Camera',
-    price: 899.99,
-    image: 'https://images.unsplash.com/photo-1612198188060-c7c2a3b66eae?w=500&h=500&fit=crop',
-    category: 'Photography',
-    rating: 4.9,
-    reviews: 156,
-    inStock: true,
-  },
-  {
-    id: '4',
-    name: 'Portable Speaker',
-    price: 79.99,
-    image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&h=500&fit=crop',
-    category: 'Audio',
-    rating: 4.5,
-    reviews: 312,
-    inStock: true,
-  },
-  {
-    id: '5',
-    name: 'Wireless Charging Pad',
-    price: 39.99,
-    image: 'https://images.unsplash.com/photo-1591290619762-a3c5d2e45b58?w=500&h=500&fit=crop',
-    category: 'Accessories',
-    rating: 4.4,
-    reviews: 423,
-    inStock: true,
-  },
-  {
-    id: '6',
-    name: 'Premium Backpack',
-    price: 129.99,
-    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=500&fit=crop',
-    category: 'Bags',
-    rating: 4.7,
-    reviews: 278,
-    inStock: false,
-  },
-  {
-    id: '7',
-    name: '4K Monitor',
-    price: 549.99,
-    image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=500&h=500&fit=crop',
-    category: 'Electronics',
-    rating: 4.6,
-    reviews: 134,
-    inStock: true,
-  },
-  {
-    id: '8',
-    name: 'Mechanical Keyboard',
-    price: 159.99,
-    image: 'https://images.unsplash.com/photo-1587829191301-dc798b83add3?w=500&h=500&fit=crop',
-    category: 'Accessories',
-    rating: 4.7,
-    reviews: 203,
-    inStock: true,
-  },
-];
-
-const categories = ['All', ...new Set(allProducts.map(p => p.category))];
+import { products, seriesList } from '../data/products';
 ---
 
-<BaseLayout title="Products - Redwan Mart">
-  {/* Header */}
-  <div class="bg-rm-gray text-white py-12">
-    <div class="container-app">
-      <h1 class="text-4xl md:text-5xl font-heading font-bold mb-4">Our Products</h1>
-      <p class="text-lg text-gray-300">
-        Explore our complete collection of premium products
+<BaseLayout
+  title="Shop all micro-brick figures | Redwan Mart"
+  description="The full Redwan Mart range — Hero Block and Spidey Block micro-brick collectibles, in stock and shipped across Bangladesh."
+  image="/og-image.jpg"
+>
+  <section class="border-b border-surface-line bg-surface-soft">
+    <div class="container-app py-14 lg:py-16">
+      <nav aria-label="Breadcrumb" class="text-sm text-ink-muted">
+        <a href="/" class="hover:text-brand-700">Home</a>
+        <span class="mx-2 text-ink-faint">/</span>
+        <span class="font-semibold text-ink">Shop</span>
+      </nav>
+      <h1 class="mt-4 text-title">The collection</h1>
+      <p class="mt-3 max-w-2xl text-lg text-ink-soft">
+        Every figure we carry, all in stock. Prices include the box, the bricks
+        and the instruction booklet.
       </p>
     </div>
-  </div>
+  </section>
 
-  {/* Products Section */}
-  <section class="py-16 md:py-24">
+  <section class="py-12 lg:py-16">
     <div class="container-app">
-      {/* Filters */}
-      <div class="mb-12">
-        <h2 class="text-lg font-bold text-rm-gray mb-4">Categories</h2>
-        <div class="flex flex-wrap gap-2">
-          {categories.map((category) => (
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="hide-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 py-1" role="tablist" aria-label="Filter by series">
+          {seriesList.map((s) => (
             <button
-              class={`px-4 py-2 rounded-full font-medium transition ${
-                category === 'All'
-                  ? 'bg-rm-red text-white'
-                  : 'bg-gray-200 text-rm-gray hover:bg-rm-gold'
-              }`}
+              type="button"
+              class="filter-btn shrink-0 rounded-full border border-surface-line bg-white px-5 py-2.5 text-sm font-semibold text-ink-soft transition hover:border-ink/20 hover:text-ink aria-selected:border-brand-600 aria-selected:bg-brand-600 aria-selected:text-white"
+              data-series={s}
+              role="tab"
+              aria-selected={s === 'All' ? 'true' : 'false'}
             >
-              {category}
+              {s}
             </button>
           ))}
         </div>
+        <p id="result-count" class="text-sm text-ink-muted">{products.length} products</p>
       </div>
 
-      {/* Products Grid */}
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {allProducts.map((product) => (
-          <ProductCard product={product} />
+      <div id="grid" class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {products.map((p, i) => (
+          <div class="product-item" data-series={p.series}>
+            <ProductCard product={p} priority={i < 3} />
+          </div>
         ))}
       </div>
 
-      {/* Pagination */}
-      <div class="mt-12 flex items-center justify-center gap-2">
-        <button class="px-4 py-2 border border-rm-red text-rm-red rounded-lg hover:bg-rm-red hover:text-white transition">
-          Previous
-        </button>
-        {[1, 2, 3, 4].map((page) => (
-          <button
-            key={page}
-            class={`px-4 py-2 rounded-lg font-medium transition ${
-              page === 1
-                ? 'bg-rm-red text-white'
-                : 'border border-rm-red text-rm-red hover:bg-rm-red hover:text-white'
-            }`}
-          >
-            {page}
-          </button>
-        ))}
-        <button class="px-4 py-2 border border-rm-red text-rm-red rounded-lg hover:bg-rm-red hover:text-white transition">
-          Next
-        </button>
-      </div>
+      <p id="empty" hidden class="mt-16 text-center text-lg text-ink-muted">
+        Nothing in that series yet.
+      </p>
     </div>
   </section>
+
+  <script is:inline>
+    (() => {
+      const buttons = [...document.querySelectorAll('.filter-btn')];
+      const items = [...document.querySelectorAll('.product-item')];
+      const count = document.getElementById('result-count');
+      const empty = document.getElementById('empty');
+
+      function apply(series, push) {
+        let shown = 0;
+        for (const el of items) {
+          const match = series === 'All' || el.dataset.series === series;
+          el.hidden = !match;
+          if (match) shown++;
+        }
+        for (const b of buttons) {
+          b.setAttribute('aria-selected', String(b.dataset.series === series));
+        }
+        if (count) count.textContent = `${shown} product${shown === 1 ? '' : 's'}`;
+        if (empty) empty.hidden = shown !== 0;
+        if (push) {
+          const url = new URL(location.href);
+          if (series === 'All') url.searchParams.delete('series');
+          else url.searchParams.set('series', series);
+          history.replaceState({}, '', url);
+        }
+      }
+
+      for (const b of buttons) {
+        b.addEventListener('click', () => apply(b.dataset.series, true));
+      }
+
+      const initial = new URL(location.href).searchParams.get('series');
+      const valid = buttons.some((b) => b.dataset.series === initial);
+      apply(valid ? initial : 'All', false);
+    })();
+  </script>
 </BaseLayout>
