@@ -1,5 +1,5 @@
 name = "redwanmart-api"
-main = "functions/[[path]].ts"
+# main = "functions/[[path]].ts"  # Handled by Astro with @astrojs/cloudflare adapter
 compatibility_date = "2024-12-16"
 compatibility_flags = ["nodejs_compat"]
 

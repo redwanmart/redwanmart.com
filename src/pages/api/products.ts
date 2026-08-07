@@ -4,16 +4,82 @@ import { AuthManager, verifyJWT } from '../../lib/auth';
 
 /**
  * GET /api/products
- * Fetch paginated list of products
- * Query params: limit, offset, category, featured
+ * Fetch paginated list of products or single product by ID
+ * Query params: id (for single), limit, offset, category, featured
  */
 export const GET: APIRoute = async ({ request, locals }) => {
   try {
     const url = new URL(request.url);
+    const productId = url.searchParams.get('id');
     const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 100);
     const offset = parseInt(url.searchParams.get('offset') || '0');
     const category = url.searchParams.get('category');
     const featured = url.searchParams.get('featured') === 'true';
+
+    // If ID is provided, fetch single product
+    if (productId) {
+      const env = locals.runtime?.env || {};
+      let product = null;
+
+      if (env.DB) {
+        const client = createCloudflareClient(env);
+        product = await client.getProductById(productId) || await client.getProductBySlug(productId);
+      } else {
+        // Mock single product
+        const mockProducts: Record<string, any> = {
+          'prod_1': {
+            id: 'prod_1',
+            name: 'Premium Wireless Headphones',
+            slug: 'premium-wireless-headphones',
+            price: 199.99,
+            category: 'Audio',
+            image_url: 'https://assets.redwanmart.com/products/headphones.jpg',
+            rating: 4.8,
+            reviews_count: 245,
+            in_stock: true,
+            featured: true,
+          },
+          'premium-wireless-headphones': {
+            id: 'prod_1',
+            name: 'Premium Wireless Headphones',
+            slug: 'premium-wireless-headphones',
+            price: 199.99,
+            category: 'Audio',
+            image_url: 'https://assets.redwanmart.com/products/headphones.jpg',
+            rating: 4.8,
+            reviews_count: 245,
+            in_stock: true,
+            featured: true,
+          },
+        };
+        product = mockProducts[productId];
+      }
+
+      if (!product) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Product not found' }),
+          {
+            status: 404,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          product,
+        }),
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Cache-Control': 'public, max-age=600',
+          },
+        }
+      );
+    }
 
     // Initialize Cloudflare client with environment
     const env = locals.runtime?.env || {};
