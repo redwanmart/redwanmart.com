@@ -1,0 +1,192 @@
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                  REDWAN MART - 2-LAYER CLOUDFLARE ARCHITECTURE                ║
+║                        Production-Grade E-Commerce Platform                   ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                                  USERS / CLIENTS                                │
+│                          (Browser, Mobile, API Consumers)                       │
+└────────────────────────────┬─────────────────────────────────────────────────────┘
+                             │
+                    ┌────────┴────────┐
+                    │  DNS ROUTING    │
+                    │ redwanmart.com  │ (Cloudflare Authoritative DNS)
+                    └────────┬────────┘
+                             │
+        ┌────────────────────┼────────────────────┐
+        │                    │                    │
+   EDGE NETWORK         EDGE NETWORK         EDGE NETWORK
+   (Global CDN)         (Global CDN)         (Global CDN)
+        │                    │                    │
+        ▼                    ▼                    ▼
+
+╔═════════════════════════════════════════════════════════════════════════════╗
+║                       CLOUDFLARE EDGE NETWORK (Global)                      ║
+║                     (Automatic geo-routing to nearest edge)                 ║
+╠═════════════════════════════════════════════════════════════════════════════╣
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │          LAYER 1: PRESENTATION (Frontend - Static Assets)          │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │                                                                   │   │
+│  │  ┌──────────────────────┐         ┌────────────────────────────┐ │   │
+│  │  │  Cloudflare Pages    │         │  Cloudflare Image CDN      │ │   │
+│  │  │  ─────────────────   │         │  ───────────────────────   │ │   │
+│  │  │  • Astro SSR Export  │◄───────►│  • Automatic image resize  │ │   │
+│  │  │  • Git-driven deploy │  R2 URLs│  • WebP/AVIF conversion    │ │   │
+│  │  │  • ~0ms Latency      │         │  • Global caching         │ │   │
+│  │  │                      │         │  • Signed URLs for media  │ │   │
+│  │  │  Routes:             │         │                            │ │   │
+│  │  │  • /                 │         │  Domain:                   │ │   │
+│  │  │  • /products         │         │  assets.redwanmart.com     │ │   │
+│  │  │  • /products/[id]    │         │                            │ │   │
+│  │  │  • /admin/dashboard  │         └────────────────────────────┘ │   │
+│  │  └──────────────────────┘                                        │   │
+│  │                │                                                 │   │
+│  │                └──────────────────────────────┐                  │   │
+│  │                                               │                  │   │
+│  └───────────────────────────────────────────────┼──────────────────┘   │
+│                                                  │                      │
+│                                            API Calls                    │
+│                                          (JSON/REST)                    │
+│                                                  │                      │
+│  ┌──────────────────────────────────────────────▼──────────────────┐   │
+│  │       LAYER 2: COMPUTE & DATA (Edge Functions + Database)       │   │
+│  ├──────────────────────────────────────────────────────────────────┤   │
+│  │                                                                  │   │
+│  │  ┌──────────────────────────┐  ┌──────────────────────────────┐ │   │
+│  │  │ Cloudflare Workers/Pages │  │  Cloudflare D1 Database      │ │   │
+│  │  │ Functions                │  │  ─────────────────────────── │ │   │
+│  │  │ ────────────────────────  │  │                              │ │   │
+│  │  │ • GET /api/products      │  │  • SQLite Serverless         │ │   │
+│  │  │ • GET /api/products/[id] │  │  • products table            │ │   │
+│  │  │ • POST /api/media/upload │  │  • media_metadata table      │ │   │
+│  │  │ • POST /webhooks/*       │  │  • users table               │ │   │
+│  │  │ • JWT validation         │  │  • orders table (future)     │ │   │
+│  │  │ • CORS handling          │  │                              │ │   │
+│  │  │ • Request routing        │  │  ┌─────────────────────┐    │ │   │
+│  │  │                          │◄────►  Cloudflare KV      │    │ │   │
+│  │  │  Middleware:             │  │  │  ────────────────   │    │ │   │
+│  │  │ • Auth checks            │  │  │  • Cache layer      │    │ │   │
+│  │  │ • Rate limiting          │  │  │  • Asset signing    │    │ │   │
+│  │  │ • Error handling         │  │  │  • Session storage  │    │ │   │
+│  │  │ • Logging                │  │  │                     │    │ │   │
+│  │  └───────────┬──────────────┘  └─────────────────────────┘    │ │   │
+│  │              │                                                 │ │   │
+│  │              └─────────────────────────┬──────────────────────┘ │   │
+│  │                                        │                        │   │
+│  │              ┌─────────────────────────▼───────────────────┐   │   │
+│  │              │  Cloudflare R2 Object Storage              │   │   │
+│  │              │  ────────────────────────────────────      │   │   │
+│  │              │  • Product images                          │   │   │
+│  │              │  • Generated video files                   │   │   │
+│  │              │  • User uploads                            │   │   │
+│  │              │  • Backup assets                           │   │   │
+│  │              │  • $0 egress fees                          │   │   │
+│  │              │                                             │   │   │
+│  │              │  ┌──────────────────────────┐              │   │   │
+│  │              │  │  Cloudflare Stream       │              │   │   │
+│  │              │  │  ──────────────────      │              │   │   │
+│  │              │  │  • HLS adaptive streams  │              │   │   │
+│  │              │  │  • Hero/banner videos    │              │   │   │
+│  │              │  │  • Embedded players      │              │   │   │
+│  │              └──────────────────────────────┘              │   │   │
+│  │                                                            │   │   │
+│  └────────────────────────────────────────────────────────────┘   │   │
+│                                                                    │   │
+│              Cloudflare AI / Media Pipeline                        │   │
+│              ─────────────────────────────                        │   │
+│                          │                                        │   │
+│              ┌───────────┴───────────┐                            │   │
+│              ▼                       ▼                            │   │
+│          (External)             (External)                        │   │
+│   ┌─────────────────────┐  ┌──────────────────────┐              │   │
+│   │  Higgsfield AI MCP  │  │  GitHub Repository   │              │   │
+│   │  ───────────────    │  │  ────────────────    │              │   │
+│   │  • Image generation │  │  • Source code       │              │   │
+│   │  • Video creation   │  │  • CI/CD triggers    │              │   │
+│   │  • Upscaling        │  │  • Version control   │              │   │
+│   │  • Webhooks         │  │                      │              │   │
+│   └─────────────────────┘  └──────────────────────┘              │   │
+│                                                                   │   │
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                            DATA FLOW EXAMPLES                                  │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  EXAMPLE 1: USER VISITS HOMEPAGE                                               │
+│  ──────────────────────────────                                                │
+│  1. Browser requests redwanmart.com → Cloudflare DNS routes to nearest edge    │
+│  2. Edge serves Astro-generated HTML from Cloudflare Pages (~50ms globally)    │
+│  3. HTML includes <img src="assets.redwanmart.com/products/...">              │
+│  4. Images auto-resized & cached by Cloudflare Image Resizing                  │
+│  5. Page loads in <1.5s with 100 Lighthouse score                              │
+│                                                                                 │
+│  EXAMPLE 2: FETCH PRODUCTS (API REQUEST)                                       │
+│  ────────────────────────────────────────                                       │
+│  1. Astro component calls fetch('/api/products')                                │
+│  2. Request routed to Cloudflare Workers (compute edge)                         │
+│  3. Worker queries D1 Database (cached in KV if <5min old)                     │
+│  4. JSON response returned in ~100ms                                            │
+│  5. Component renders product cards with images from CDN                        │
+│                                                                                 │
+│  EXAMPLE 3: ADMIN GENERATES PRODUCT IMAGES                                     │
+│  ───────────────────────────────────────────                                    │
+│  1. Admin enters product prompt in dashboard                                    │
+│  2. POST /api/media/generate → Worker validates JWT                            │
+│  3. Worker calls Higgsfield AI API (external)                                   │
+│  4. Higgsfield generates image & returns URL in 30-60s                         │
+│  5. Worker stores metadata in D1, uploads to R2                                 │
+│  6. Webhook updates product record with CDN URL                                │
+│  7. Website immediately shows new product image globally                        │
+│                                                                                 │
+│  EXAMPLE 4: DATABASE QUERY (OPTIMIZED PATH)                                    │
+│  ────────────────────────────────────────────                                   │
+│  1. First request: Query D1 directly (~200ms)                                   │
+│  2. Response cached in KV for 5 minutes                                         │
+│  3. Subsequent requests: Return from KV (~10ms)                                 │
+│  4. Cache invalidated when products updated                                     │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                          KEY PERFORMANCE BENEFITS                              │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  ✓ ZERO EGRESS FEES         - R2 to CDN costs $0 (vs S3 $0.08/GB)             │
+│  ✓ GLOBAL LATENCY           - Users connect to edge <100ms away                │
+│  ✓ AUTO-SCALING             - Workers handle 1000s concurrent requests         │
+│  ✓ SERVERLESS COSTS         - Pay only for actual execution                   │
+│  ✓ INSTANT DEPLOYMENTS      - Git push → live in <30 seconds                  │
+│  ✓ INCLUDED FEATURES        - DDoS protection, WAF, caching built-in          │
+│  ✓ AI INTEGRATION READY     - Higgsfield → R2 → CDN (native support)         │
+│  ✓ TYPE-SAFE API            - TypeScript prevents runtime errors              │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                            TECHNICAL STACK SUMMARY                             │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  Frontend:           Astro 4.x + React 18 + Tailwind CSS 3                     │
+│  Backend:            Cloudflare Workers + D1 + KV                              │
+│  Database:           SQLite (Cloudflare D1) - Serverless                       │
+│  Media Storage:      Cloudflare R2 + Cloudflare Stream                         │
+│  CDN & Images:       Cloudflare Pages + Image Resizing                         │
+│  AI Integration:     Higgsfield AI (MCP connector)                              │
+│  Version Control:    GitHub (redwanmart/redwanmart.com)                        │
+│  CI/CD:              GitHub Actions → Cloudflare deployment                    │
+│  Monitoring:         Cloudflare Analytics + Custom metrics                     │
+│  Auth:               JWT tokens (via Workers)                                   │
+│  Secrets:            Cloudflare Environment Variables (.env.local)            │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+This architecture guarantees:
+✓ Production-ready security (Cloudflare WAF, HTTPS, DDoS protection)
+✓ Enterprise-grade scalability (auto-scaling compute)
+✓ Developer-friendly workflow (Git push = live deployment)
+✓ Cost-optimal infrastructure (pay-per-execution serverless)
+✓ Global performance (CDN at 300+ edge locations)
+✓ AI-native design (Higgsfield integration built-in)
