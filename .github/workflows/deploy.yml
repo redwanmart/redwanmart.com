@@ -1,0 +1,118 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      deployments: write
+
+    environment:
+      name: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+      url: ${{ github.ref_name == 'main' && 'https://redwanmart.com' || 'https://staging.redwanmart.com' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+        env:
+          CI: true
+          NODE_ENV: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: redwanmart
+          directory: dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+
+      - name: Create deployment status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = context.payload.workflow_run?.conclusion === 'success' ? 'success' : 'failure';
+            const environment = context.ref === 'refs/heads/main' ? 'production' : 'staging';
+            const url = context.ref === 'refs/heads/main' ? 'https://redwanmart.com' : 'https://staging.redwanmart.com';
+
+            github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.ref,
+              environment: environment,
+              description: `Cloudflare Pages deployment`,
+              auto_merge: false,
+              required_contexts: []
+            });
+
+  notify:
+    runs-on: ubuntu-latest
+    if: always()
+    needs: deploy
+    timeout-minutes: 5
+
+    steps:
+      - name: Notify deployment
+        if: needs.deploy.result == 'success'
+        run: |
+          echo "✓ Deployment completed successfully!"
+          echo "Environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}"
+          echo "URL: ${{ github.ref_name == 'main' && 'https://redwanmart.com' || 'https://staging.redwanmart.com' }}"
+
+      - name: Notify failure
+        if: needs.deploy.result != 'success'
+        run: |
+          echo "✗ Deployment failed!"
+          exit 1
+
+      - name: Slack notification
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "Redwan Mart Deployment ${{ needs.deploy.result == 'success' && '✓ Success' || '✗ Failed' }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Redwan Mart Deployment*\nStatus: `${{ needs.deploy.result }}`\nBranch: `${{ github.ref_name }}`\nCommit: `${{ github.sha }}`"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        continue-on-error: true
