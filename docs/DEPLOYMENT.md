@@ -2,6 +2,62 @@
 
 This document covers setting up and deploying Redwan Mart to Cloudflare infrastructure.
 
+---
+
+## Start here: what is currently blocking deployment
+
+The build pipeline works end to end. On a push to `main`, `.github/workflows/deploy.yml`
+checks out, runs `npm ci`, builds, and then stops at the **Check Cloudflare
+credentials** step because two repository secrets are missing.
+
+### 1. Two GitHub secrets (required to deploy at all)
+
+Add under **Settings → Secrets and variables → Actions → New repository secret**:
+
+| Secret | Where to get it |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | dash.cloudflare.com/profile/api-tokens — needs *Cloudflare Pages: Edit* |
+| `CLOUDFLARE_ACCOUNT_ID` | dash.cloudflare.com — shown in the sidebar |
+
+Once both exist, every push to `main` deploys on its own. Nothing else is needed
+for the public storefront: it is fully static and reads its catalogue from
+`src/data/products.ts`, so it does not depend on D1, R2 or KV to render.
+
+To deploy without waiting for a push, run the workflow manually from the
+**Actions** tab (it accepts `workflow_dispatch`).
+
+### 2. Four runtime secrets (required before the admin area works)
+
+The auth endpoints **fail closed**: until these are set, `/api/auth/login`
+returns 503 and no one can sign in. That is deliberate — the previous fallbacks
+were fixed strings committed to this repository.
+
+```bash
+wrangler pages secret put JWT_SECRET           --project-name=redwanmart  # openssl rand -base64 48
+wrangler pages secret put ADMIN_EMAIL          --project-name=redwanmart
+wrangler pages secret put ADMIN_PASSWORD       --project-name=redwanmart
+wrangler pages secret put ADMIN_ANALYTICS_TOKEN --project-name=redwanmart
+```
+
+> **Rotate first.** `admin123` and `owner123` were printed on the public
+> `/admin/login` page and committed in source. Treat them as compromised and do
+> not reuse them anywhere.
+
+### 3. Publish directory
+
+If you configure Pages through the dashboard rather than this workflow, the
+build output directory is **`dist/client`**, not `dist`. The Astro Cloudflare
+adapter puts the site there; `dist/server` is build-time output only, so
+publishing `dist` yields a site with no `index.html` at its root.
+
+### Before taking real orders
+
+Prices in `src/data/products.ts` are placeholders and are marked as such in the
+file. Confirm every `price` and `compareAt` value before the store accepts
+money.
+
+---
+
 ## Prerequisites
 
 - Cloudflare account with billing enabled
