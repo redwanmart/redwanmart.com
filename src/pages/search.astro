@@ -1,178 +1,103 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import ProductCard from '../components/product-grid/ProductCard.astro';
+import { products } from '../data/products';
 
-const searchQuery = Astro.url.searchParams.get('q') || '';
-const category = Astro.url.searchParams.get('category') || '';
-const sort = Astro.url.searchParams.get('sort') || 'relevance';
-const minPrice = Astro.url.searchParams.get('minPrice');
-const maxPrice = Astro.url.searchParams.get('maxPrice');
-
-// Fetch search results
-let results = [];
-let total = 0;
-
-if (searchQuery) {
-  try {
-    const baseUrl = Astro.site?.origin || 'https://redwanmart.com';
-    const params = new URLSearchParams({
-      q: searchQuery,
-      ...(category && { category }),
-      ...(sort && { sort }),
-      ...(minPrice && { minPrice }),
-      ...(maxPrice && { maxPrice }),
-      limit: '20',
-    });
-
-    const res = await fetch(`${baseUrl}/api/search?${params}`);
-    const data = await res.json();
-
-    if (data.success) {
-      results = data.results || [];
-      total = data.total || 0;
-    }
-  } catch (error) {
-    console.error('Search error:', error);
-  }
-}
-
-const title = searchQuery ? `Search: ${searchQuery} | Redwan Mart` : 'Search Products | Redwan Mart';
+/**
+ * The site is a static build, so the query string is not available at render
+ * time. Every product is rendered up front and filtered in the browser — with
+ * a six-item catalogue that is cheaper than a round trip to the API.
+ */
+const index = products.map((p) => ({
+  id: p.id,
+  haystack: [p.name, p.series, p.model, p.description, p.tagline].join(' ').toLowerCase(),
+}));
 ---
 
-<BaseLayout title={title} description={`Search results for: ${searchQuery}`}>
-  <div class="max-w-6xl mx-auto px-6 py-12">
-    <!-- Search Header -->
-    <div class="mb-8">
-      <h1 class="text-4xl font-bold text-gray-900 mb-4">
-        {searchQuery ? `Search Results for "${searchQuery}"` : 'Search Products'}
-      </h1>
-      {total > 0 && (
-        <p class="text-gray-600 text-lg">
-          Found <span class="font-bold text-red-600">{total}</span> product{total !== 1 ? 's' : ''}
-        </p>
-      )}
-    </div>
+<BaseLayout
+  title="Search | Redwan Mart"
+  description="Search the Redwan Mart catalogue of micro-brick hero figures."
+>
+  <section class="border-b border-surface-line bg-surface-soft">
+    <div class="container-app py-14 lg:py-16">
+      <nav aria-label="Breadcrumb" class="text-sm text-ink-muted">
+        <a href="/" class="hover:text-brand-700">Home</a>
+        <span class="mx-2 text-ink-faint">/</span>
+        <span class="font-semibold text-ink">Search</span>
+      </nav>
+      <h1 class="mt-4 text-title">Search the catalogue</h1>
 
-    <!-- Search Form -->
-    <div class="bg-gray-50 p-6 rounded-lg mb-8">
-      <form method="get" class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">Search</label>
-            <input
-              type="text"
-              name="q"
-              value={searchQuery}
-              placeholder="Search products..."
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">Category</label>
-            <select
-              name="category"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
-            >
-              <option value="">All Categories</option>
-              <option value="electronics" selected={category === 'electronics'}>Electronics</option>
-              <option value="wearables" selected={category === 'wearables'}>Wearables</option>
-              <option value="audio" selected={category === 'audio'}>Audio</option>
-              <option value="photography" selected={category === 'photography'}>Photography</option>
-              <option value="accessories" selected={category === 'accessories'}>Accessories</option>
-              <option value="bags" selected={category === 'bags'}>Bags</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">Sort By</label>
-            <select
-              name="sort"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
-            >
-              <option value="relevance" selected={sort === 'relevance'}>Relevance</option>
-              <option value="price_asc" selected={sort === 'price_asc'}>Price: Low to High</option>
-              <option value="price_desc" selected={sort === 'price_desc'}>Price: High to Low</option>
-              <option value="rating" selected={sort === 'rating'}>Rating</option>
-              <option value="newest" selected={sort === 'newest'}>Newest</option>
-            </select>
-          </div>
-
-          <div class="flex items-end">
-            <button
-              type="submit"
-              class="w-full bg-red-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-700 transition"
-            >
-              Search
-            </button>
-          </div>
-        </div>
+      <form id="search-form" role="search" class="mt-7 flex max-w-xl gap-3">
+        <label for="q" class="sr-only">Search products</label>
+        <input
+          id="q" name="q" type="search" autocomplete="off"
+          placeholder="Try “spidey”, “dark knight”, or a model number…"
+          class="field flex-1"
+        />
+        <button type="submit" class="btn-primary px-6">Search</button>
       </form>
+
+      <p id="summary" class="mt-4 text-sm text-ink-muted" aria-live="polite"></p>
     </div>
+  </section>
 
-    <!-- Results Grid -->
-    {results.length > 0 ? (
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {results.map((product: any) => (
-          <div key={product.id} class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition transform hover:scale-105">
-            <div class="aspect-square bg-gray-200 overflow-hidden">
-              <img
-                src={product.image_url || '/placeholder-product.jpg'}
-                alt={product.name}
-                class="w-full h-full object-cover"
-              />
-            </div>
-
-            <div class="p-4">
-              <h3 class="text-sm font-semibold text-gray-900 mb-2 line-clamp-2">{product.name}</h3>
-
-              <div class="flex items-center gap-1 mb-2">
-                {[...Array(5)].map((_, i) => (
-                  <span key={i} class="text-sm">
-                    {i < Math.floor(product.rating || 0) ? '★' : '☆'}
-                  </span>
-                ))}
-                <span class="text-xs text-gray-600">({product.reviews_count})</span>
-              </div>
-
-              <p class="text-xl font-bold text-red-600 mb-3">${product.price.toFixed(2)}</p>
-
-              <a
-                href={`/products/${product.slug || product.id}`}
-                class="block w-full text-center bg-red-600 text-white py-2 rounded-lg font-semibold text-sm hover:bg-red-700 transition"
-              >
-                View Details
-              </a>
-            </div>
+  <section class="py-12 lg:py-16">
+    <div class="container-app">
+      <div id="results" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {products.map((p) => (
+          <div class="result-item" data-id={p.id}>
+            <ProductCard product={p} />
           </div>
         ))}
       </div>
-    ) : (
-      <div class="text-center py-12">
-        <div class="text-6xl mb-4">🔍</div>
-        <h2 class="text-2xl font-bold text-gray-900 mb-2">
-          {searchQuery ? 'No products found' : 'Start searching'}
-        </h2>
-        <p class="text-gray-600 mb-6">
-          {searchQuery
-            ? `We couldn't find any products matching "${searchQuery}". Try a different search.`
-            : 'Enter a search term to find products.'}
-        </p>
-        <a
-          href="/"
-          class="inline-block bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition"
-        >
-          Browse All Products
-        </a>
-      </div>
-    )}
-  </div>
-</BaseLayout>
 
-<style>
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-</style>
+      <div id="empty" hidden class="py-16 text-center">
+        <p class="text-lg font-semibold text-ink">No matches.</p>
+        <p class="mt-2 text-ink-muted">Try a shorter word, or browse the full range.</p>
+        <a href="/products" class="btn-outline mt-7">View all products</a>
+      </div>
+    </div>
+  </section>
+
+  <script is:inline define:vars={{ index }}>
+    (() => {
+      const form = document.getElementById('search-form');
+      const input = document.getElementById('q');
+      const summary = document.getElementById('summary');
+      const empty = document.getElementById('empty');
+      const items = [...document.querySelectorAll('.result-item')];
+      const byId = new Map(index.map((e) => [e.id, e.haystack]));
+
+      function run(term, push) {
+        const q = (term || '').trim().toLowerCase();
+        let shown = 0;
+        for (const el of items) {
+          const hay = byId.get(el.dataset.id) || '';
+          const match = !q || q.split(/\s+/).every((w) => hay.includes(w));
+          el.hidden = !match;
+          if (match) shown++;
+        }
+        empty.hidden = shown !== 0;
+        summary.textContent = q
+          ? `${shown} result${shown === 1 ? '' : 's'} for “${term.trim()}”`
+          : `Showing all ${items.length} products`;
+        if (push) {
+          const url = new URL(location.href);
+          if (q) url.searchParams.set('q', term.trim());
+          else url.searchParams.delete('q');
+          history.replaceState({}, '', url);
+        }
+      }
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        run(input.value, true);
+      });
+      input.addEventListener('input', () => run(input.value, true));
+
+      const initial = new URL(location.href).searchParams.get('q') || '';
+      input.value = initial;
+      run(initial, false);
+    })();
+  </script>
+</BaseLayout>

@@ -1,6 +1,20 @@
 import type { APIRoute } from 'astro';
 import { AuthManager, createAuthManager } from '../../../lib/auth';
 
+/** Compares two strings in time independent of how far they match. */
+function timingSafeEqual(a: string, b: string): boolean {
+  const enc = new TextEncoder();
+  const x = enc.encode(a);
+  const y = enc.encode(b);
+  // Length still leaks, so fold it into the result rather than early-returning.
+  let diff = x.length ^ y.length;
+  const len = Math.max(x.length, y.length);
+  for (let i = 0; i < len; i++) {
+    diff |= (x[i] ?? 0) ^ (y[i] ?? 0);
+  }
+  return diff === 0;
+}
+
 /**
  * POST /api/auth/login
  * Authenticate user and return JWT token
@@ -15,7 +29,7 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    const { email, password } = await request.json();
+    const { email, password } = (await request.json()) as { email?: string; password?: string };
 
     // Validate input
     if (!email || !password) {
@@ -40,36 +54,36 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Initialize auth manager
-    const jwtSecret = process.env.JWT_SECRET || 'dev-secret-key-min-32-chars-required';
+    // Credentials come from the environment, never from source. This file
+    // previously carried a hardcoded map of plaintext logins (including an
+    // admin account on the owner's real address), which shipped to anyone
+    // who could read the repo or the deployed bundle.
+    //
+    // Set ADMIN_EMAIL, ADMIN_PASSWORD and JWT_SECRET as Cloudflare secrets.
+    // Until a real user table exists in D1, this is the only account.
+    const jwtSecret = process.env.JWT_SECRET;
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    // Fail closed: without configuration there is no way in, rather than a
+    // fallback secret that is identical on every deployment.
+    if (!jwtSecret || jwtSecret.length < 32 || !adminEmail || !adminPassword) {
+      console.error('Auth is not configured: JWT_SECRET, ADMIN_EMAIL and ADMIN_PASSWORD must be set.');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Authentication is not configured' }),
+        { status: 503, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     const authManager = createAuthManager(jwtSecret);
 
-    // Mock user authentication
-    // In production, query D1 database to verify email and password hash
-    const mockUsers: Record<string, any> = {
-      'admin@redwanmart.com': {
-        id: 'user_admin_1',
-        email: 'admin@redwanmart.com',
-        role: 'admin',
-        password: 'admin123', // In production: use bcrypt verification
-      },
-      'customer1@example.com': {
-        id: 'user_cust_1',
-        email: 'customer1@example.com',
-        role: 'customer',
-        password: 'password123',
-      },
-      'redwanmartbd@gmail.com': {
-        id: 'user_owner_1',
-        email: 'redwanmartbd@gmail.com',
-        role: 'admin',
-        password: 'owner123',
-      },
-    };
+    const emailMatches = email.toLowerCase() === adminEmail.toLowerCase();
+    const passwordMatches = timingSafeEqual(password, adminPassword);
+    const user = emailMatches && passwordMatches
+      ? { id: 'user_admin_1', email: adminEmail, role: 'admin' as const }
+      : null;
 
-    const user = mockUsers[email];
-
-    if (!user || user.password !== password) {
+    if (!user) {
       // Use generic error message for security (don't reveal if email exists)
       return new Response(
         JSON.stringify({ success: false, error: 'Invalid email or password' }),

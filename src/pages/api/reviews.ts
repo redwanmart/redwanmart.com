@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createCloudflareClient } from '../../lib/cloudflare';
-import { AuthManager, verifyJWT } from '../../lib/auth';
+import { AuthManager, verifyJWT, requireJwtSecret } from '../../lib/auth';
 
 /**
  * GET /api/reviews?productId=...
@@ -20,38 +20,23 @@ export const GET: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    // Mock reviews data
-    const mockReviews = [
-      {
-        id: 'rev_1',
-        productId,
-        userId: 'user_cust_1',
-        userEmail: 'john@example.com',
-        userName: 'John Doe',
-        rating: 5,
-        title: 'Excellent product!',
-        comment: 'Very satisfied with the quality and performance.',
-        verified_purchase: true,
-        helpful_count: 42,
-        created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'rev_2',
-        productId,
-        userId: 'user_cust_2',
-        userEmail: 'jane@example.com',
-        userName: 'Jane Smith',
-        rating: 4,
-        title: 'Good value for money',
-        comment: 'Great product but shipping took a bit longer than expected.',
-        verified_purchase: true,
-        helpful_count: 28,
-        created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-    ];
+    const env = locals.runtime?.env || {};
+    let reviews: any[] = [];
 
-    // Always use mock reviews (development mode)
-    let reviews = mockReviews;
+    // Fetch reviews from D1 database
+    try {
+      const client = createCloudflareClient(env);
+      const result = await client.queryDB(
+        'SELECT * FROM reviews WHERE product_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?',
+        [productId, limit, offset]
+      );
+
+      reviews = result?.results || [];
+    } catch (dbError) {
+      console.error('D1 query error:', dbError);
+      // Return empty reviews on error
+      reviews = [];
+    }
 
     return new Response(
       JSON.stringify({
@@ -93,7 +78,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
     // Verify JWT token
-    const jwtSecret = process.env.JWT_SECRET || 'dev-secret-key-min-32-chars-required';
+    const jwtSecret = requireJwtSecret();
     const authManager = new AuthManager(jwtSecret);
     const user = await verifyJWT(request, authManager);
 
@@ -107,7 +92,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    const data = await request.json();
+    const data = (await request.json()) as Record<string, any>;
     const { productId, rating, title, comment } = data;
 
     // Validate input

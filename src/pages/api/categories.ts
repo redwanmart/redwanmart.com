@@ -7,63 +7,37 @@ import { createCloudflareClient } from '../../lib/cloudflare';
  */
 export const GET: APIRoute = async ({ request, locals }) => {
   try {
-    // Mock categories from seed data
-    const mockCategories = [
-      {
-        id: 'cat_1',
-        name: 'Electronics',
-        slug: 'electronics',
-        description: 'High-tech gadgets and devices',
-        display_order: 1,
-      },
-      {
-        id: 'cat_2',
-        name: 'Wearables',
-        slug: 'wearables',
-        description: 'Smartwatches and fitness trackers',
-        display_order: 2,
-      },
-      {
-        id: 'cat_3',
-        name: 'Audio',
-        slug: 'audio',
-        description: 'Headphones, speakers, and audio equipment',
-        display_order: 3,
-      },
-      {
-        id: 'cat_4',
-        name: 'Photography',
-        slug: 'photography',
-        description: 'Cameras and photography accessories',
-        display_order: 4,
-      },
-      {
-        id: 'cat_5',
-        name: 'Accessories',
-        slug: 'accessories',
-        description: 'Phone cases, chargers, and more',
-        display_order: 5,
-      },
-      {
-        id: 'cat_6',
-        name: 'Bags',
-        slug: 'bags',
-        description: 'Backpacks, laptop bags, and travel bags',
-        display_order: 6,
-      },
-      {
-        id: 'cat_7',
-        name: 'Toys & Collectibles',
-        slug: 'toys-collectibles',
-        description: 'Collectible action figures, building blocks, and toys',
-        display_order: 7,
-      },
-    ];
+    const env = locals.runtime?.env || {};
+
+    // Fetch categories from D1 database
+    let categories = [];
+
+    try {
+      const client = createCloudflareClient(env);
+      const result = await client.queryDB(
+        'SELECT DISTINCT category FROM products ORDER BY category',
+        []
+      );
+
+      if (result?.results) {
+        categories = result.results.map((row: any, index: number) => ({
+          id: `cat_${index + 1}`,
+          name: row.category,
+          slug: row.category.toLowerCase().replace(/\s+/g, '-'),
+          description: `Browse ${row.category} products`,
+          display_order: index + 1,
+        }));
+      }
+    } catch (dbError) {
+      console.error('D1 query error:', dbError);
+      // Return empty categories on error
+      categories = [];
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
-        categories: mockCategories,
+        categories,
       }),
       {
         status: 200,

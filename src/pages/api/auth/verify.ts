@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { AuthManager, verifyJWT, createAuthManager } from '../../../lib/auth';
+import { AuthManager, verifyJWT, createAuthManager, requireJwtSecret } from '../../../lib/auth';
 
 /**
  * POST /api/auth/verify
@@ -8,7 +8,7 @@ import { AuthManager, verifyJWT, createAuthManager } from '../../../lib/auth';
  */
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const jwtSecret = process.env.JWT_SECRET || 'dev-secret-key-min-32-chars-required';
+    const jwtSecret = requireJwtSecret();
     const authManager = createAuthManager(jwtSecret);
 
     const user = await verifyJWT(request, authManager);
@@ -64,7 +64,7 @@ export const POST: APIRoute = async ({ request }) => {
  */
 export const GET: APIRoute = async ({ request }) => {
   try {
-    const jwtSecret = process.env.JWT_SECRET || 'dev-secret-key-min-32-chars-required';
+    const jwtSecret = requireJwtSecret();
     const authManager = createAuthManager(jwtSecret);
 
     const user = await verifyJWT(request, authManager);

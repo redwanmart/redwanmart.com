@@ -35,10 +35,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22.x'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: npm ci
 
       - name: Build project
         run: npm run build
@@ -46,15 +47,27 @@ jobs:
           CI: true
           NODE_ENV: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
 
+      # Fail loudly and early rather than midway through a deploy.
+      - name: Check Cloudflare credentials
+        run: |
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ] || [ -z "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]; then
+            echo "::error::Missing CLOUDFLARE_API_TOKEN and/or CLOUDFLARE_ACCOUNT_ID."
+            echo "::error::Add them under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+      # The Astro Cloudflare adapter writes the site to dist/client
+      # (dist/server holds build-time only output), so that is what Pages
+      # must publish — publishing dist/ yields a site with no index.html.
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: redwanmart
-          directory: dist
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+          command: >-
+            pages deploy dist/client
+            --project-name=redwanmart
+            --branch=${{ github.ref_name == 'main' && 'production' || 'staging' }}
 
       - name: Create deployment status
         if: always()

@@ -1,45 +1,103 @@
 ---
-interface Props {
-  title: string;
-  subtitle: string;
-  ctaText?: string;
-  ctaLink?: string;
-  backgroundImage?: string;
-}
+import { products, featuredProducts, formatPrice } from '../../data/products';
 
-const {
-  title,
-  subtitle,
-  ctaText = 'Shop Now',
-  ctaLink = '/products',
-  backgroundImage = 'linear-gradient(135deg, #DC2626 0%, #FBBF24 100%)',
-} = Astro.props;
+const [lead] = featuredProducts();
+const rest = products.filter((p) => p.id !== lead?.id).slice(0, 3);
 ---
 
-<section
-  class="relative py-20 md:py-32 text-white overflow-hidden"
-  style={{ backgroundImage, backgroundColor: '#DC2626' }}
->
-  {/* Decorative Elements */}
-  <div class="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-48 -mt-48"></div>
-  <div class="absolute bottom-0 left-0 w-72 h-72 bg-white/10 rounded-full -ml-36 -mb-36"></div>
+<section class="relative overflow-hidden bg-surface-soft">
+  <!-- warm brand wash -->
+  <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+    <div class="absolute -left-32 -top-40 h-[34rem] w-[34rem] rounded-full bg-brand-100/70 blur-3xl"></div>
+    <div class="absolute -bottom-52 right-[-10rem] h-[32rem] w-[32rem] rounded-full bg-gold-200/60 blur-3xl"></div>
+  </div>
 
-  <div class="container-app relative z-10">
-    <div class="max-w-2xl">
-      <h1 class="text-4xl md:text-5xl lg:text-6xl font-heading font-bold mb-6 animate-slide-in-up">
-        {title}
+  <div class="container-app relative grid items-center gap-14 py-16 lg:grid-cols-[1.05fr_1fr] lg:py-24">
+    <div class="animate-rise">
+      <span class="chip">
+        <span class="inline-block h-1.5 w-1.5 rounded-full bg-brand-600"></span>
+        Micro-brick hero figures
+      </span>
+
+      <h1 class="mt-5 font-heading text-display">
+        Build them.<br />
+        Display them.<br />
+        <span class="text-brand-600">Own the shelf.</span>
       </h1>
-      <p class="text-lg md:text-xl text-gray-100 mb-8 max-w-xl animate-slide-in-up">
-        {subtitle}
+
+      <p class="mt-6 max-w-xl text-lg leading-relaxed text-ink-soft">
+        Premium micro-brick collectibles, hand-checked in Dhaka and shipped
+        nationwide. Six figures in the range — every one of them a build worth
+        the evening it takes.
       </p>
-      <div class="flex flex-col sm:flex-row gap-4">
-        <a href={ctaLink} class="btn btn-secondary">
-          {ctaText}
+
+      <div class="mt-9 flex flex-wrap items-center gap-3">
+        <a href="/products" class="btn-primary px-7 py-3.5 text-base">
+          Shop the collection
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6" />
+          </svg>
         </a>
-        <a href="#featured" class="btn btn-outline">
-          Learn More
-        </a>
+        <a href="/about" class="btn-outline px-7 py-3.5 text-base">Our story</a>
       </div>
+
+      <dl class="mt-12 grid max-w-lg grid-cols-3 gap-6 border-t border-surface-line pt-7">
+        <div>
+          <dt class="text-2xl font-bold text-ink">6</dt>
+          <dd class="mt-0.5 text-sm text-ink-muted">Figures in range</dd>
+        </div>
+        <div>
+          <dt class="text-2xl font-bold text-ink">14+</dt>
+          <dd class="mt-0.5 text-sm text-ink-muted">Builder age</dd>
+        </div>
+        <div>
+          <dt class="text-2xl font-bold text-ink">100%</dt>
+          <dd class="mt-0.5 text-sm text-ink-muted">Checked in-house</dd>
+        </div>
+      </dl>
+    </div>
+
+    <!-- product showcase -->
+    <div class="relative mx-auto w-full max-w-lg lg:max-w-none">
+      {lead && (
+        <a href={`/products/${lead.id}`} class="group relative z-10 block overflow-hidden rounded-3xl bg-white shadow-lift ring-1 ring-black/5">
+          <picture>
+            <source srcset={lead.imageWebp} type="image/webp" />
+            <img
+              src={lead.image} alt={lead.name}
+              width="1200" height="1200" fetchpriority="high" decoding="async"
+              class="aspect-square w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+            />
+          </picture>
+          <!-- The product creative already carries its own name and spec bar,
+               so only the price is overlaid, clear of both. -->
+          <span class="absolute left-4 top-4 rounded-full bg-white/95 px-4 py-2 text-sm font-bold text-ink shadow-card backdrop-blur">
+            {formatPrice(lead.price)}
+          </span>
+        </a>
+      )}
+
+      <div class="absolute -right-4 -top-4 z-20 hidden rotate-6 rounded-2xl bg-gold-400 px-4 py-3 text-center shadow-lift sm:block">
+        <p class="font-heading text-lg font-bold leading-none text-ink">14+</p>
+        <p class="mt-1 text-[0.65rem] font-bold uppercase tracking-wider text-ink/70">Ages</p>
+      </div>
+
+      <ul class="mt-4 grid grid-cols-3 gap-4">
+        {rest.map((p) => (
+          <li>
+            <a
+              href={`/products/${p.id}`}
+              class="group block overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-black/5 transition hover:-translate-y-1 hover:shadow-lift"
+              aria-label={p.name}
+            >
+              <img
+                src={p.thumb} alt={p.name} width="600" height="600" decoding="async"
+                class="aspect-square w-full object-cover transition duration-500 group-hover:scale-105"
+              />
+            </a>
+          </li>
+        ))}
+      </ul>
     </div>
   </div>
 </section>

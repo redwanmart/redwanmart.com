@@ -8,7 +8,7 @@ import { createCloudflareClient } from '../../lib/cloudflare';
  */
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
-    const data = await request.json();
+    const data = (await request.json()) as Record<string, any>;
     const { eventType, productId, userId, eventData } = data;
 
     if (!eventType) {
@@ -91,9 +91,19 @@ export const GET: APIRoute = async ({ request, locals }) => {
   try {
     // Check for admin access
     const authHeader = request.headers.get('authorization');
+    // No default token: the previous fallback was a fixed string in the repo,
+    // so anyone could read the analytics. Unconfigured means locked, not open.
     const adminToken = process.env.ADMIN_ANALYTICS_TOKEN;
 
-    if (!authHeader?.includes(adminToken || 'admin-token') && !adminToken) {
+    if (!adminToken) {
+      console.error('ADMIN_ANALYTICS_TOKEN is not configured.');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Analytics access is not configured' }),
+        { status: 503, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (authHeader !== `Bearer ${adminToken}`) {
       return new Response(
         JSON.stringify({
           success: false,
