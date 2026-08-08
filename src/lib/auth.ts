@@ -115,3 +115,23 @@ export async function verifyJWT(
   const token = authHeader.slice(7);
   return authManager.verifyToken(token);
 }
+
+/**
+ * Reads JWT_SECRET, refusing to fall back to a shared default.
+ *
+ * These endpoints used to default to a literal dev secret when the variable
+ * was unset. That value is identical on every deployment and visible in the
+ * repository, so anyone could mint a token with role "admin". Failing closed
+ * is the only safe behaviour: an unconfigured deployment must reject
+ * authentication rather than accept forged tokens.
+ *
+ * Throws if unset or shorter than 32 characters; call sites already sit
+ * inside a try/catch that returns a 500.
+ */
+export function requireJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error('JWT_SECRET is not configured (must be at least 32 characters).');
+  }
+  return secret;
+}

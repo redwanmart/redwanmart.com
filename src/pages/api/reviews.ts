@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createCloudflareClient } from '../../lib/cloudflare';
-import { AuthManager, verifyJWT } from '../../lib/auth';
+import { AuthManager, verifyJWT, requireJwtSecret } from '../../lib/auth';
 
 /**
  * GET /api/reviews?productId=...
@@ -78,7 +78,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
     // Verify JWT token
-    const jwtSecret = process.env.JWT_SECRET || 'dev-secret-key-min-32-chars-required';
+    const jwtSecret = requireJwtSecret();
     const authManager = new AuthManager(jwtSecret);
     const user = await verifyJWT(request, authManager);
 
