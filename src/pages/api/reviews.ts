@@ -92,7 +92,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    const data = await request.json();
+    const data = (await request.json()) as Record<string, any>;
     const { productId, rating, title, comment } = data;
 
     // Validate input

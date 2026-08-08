@@ -20,7 +20,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     //   );
     // }
 
-    const payload = await request.json();
+    const payload = (await request.json()) as Record<string, any>;
     const { jobId, status, urls, productId, mediaType, prompt } = payload;
 
     if (!jobId || !status) {

@@ -29,7 +29,7 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    const { email, password } = await request.json();
+    const { email, password } = (await request.json()) as { email?: string; password?: string };
 
     // Validate input
     if (!email || !password) {

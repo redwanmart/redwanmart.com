@@ -8,7 +8,7 @@ import { createCloudflareClient } from '../../lib/cloudflare';
  */
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
-    const data = await request.json();
+    const data = (await request.json()) as Record<string, any>;
     const { eventType, productId, userId, eventData } = data;
 
     if (!eventType) {

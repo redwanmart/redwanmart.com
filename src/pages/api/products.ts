@@ -155,7 +155,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    const data = await request.json();
+    const data = (await request.json()) as Record<string, any>;
 
     // Validate required fields
     const { name, slug, description, price, category, sku } = data;
