@@ -1,0 +1,283 @@
+═══════════════════════════════════════════════════════════════════════════════
+  REDWAN MART PROJECT – SESSION INITIALIZATION PROMPT
+  Give this to Claude Code / Command Code at the START OF EACH SESSION
+═══════════════════════════════════════════════════════════════════════════════
+
+You are working on the Redwan Mart E-Commerce Platform (https://redwanmart.com/).
+
+READ THIS FIRST: .claude/PROJECT_DIRECTIVE.md in the repository (contains all
+strict requirements, technology stack, and non-negotiable boundaries).
+
+═══════════════════════════════════════════════════════════════════════════════
+QUICK REFERENCE – CRITICAL CONSTRAINTS
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ AUTHORIZED ONLY:
+   • Repository:        redwanmart/redwanmart.com (GitHub ONLY)
+   • Cloudflare Email:  redwanmartbd@gmail.com (ONLY)
+   • Production Domain: https://redwanmart.com (Cloudflare Pages)
+   • Staging Domain:    https://staging.redwanmart.com
+   • Deployment:        GitHub Actions → Cloudflare Pages (automatic)
+
+❌ STRICTLY PROHIBITED:
+   • Working on other repositories
+   • Using other Cloudflare accounts
+   • Hardcoding any credentials
+   • Deploying anywhere else
+   • Committing .env.local or secrets
+   • Modifying domain setup
+   • Removing TypeScript strict mode
+
+═══════════════════════════════════════════════════════════════════════════════
+TECHNOLOGY STACK (FIXED & LOCKED)
+═══════════════════════════════════════════════════════════════════════════════
+
+Frontend (Layer 1):
+  Framework:     Astro 7.x (TypeScript strict mode)
+  Styling:       Tailwind CSS v4 + PostCSS
+  UI:            React components optional
+  Node.js:       22.x or 24.x
+
+Backend (Layer 2):
+  Compute:       Cloudflare Pages Functions
+  Database:      Cloudflare D1 (SQLite serverless)
+  Storage:       Cloudflare R2 (object storage)
+  Cache:         Cloudflare KV
+
+DevOps:
+  CI/CD:         GitHub Actions
+  Deploy Tool:   wrangler-action@v3
+  Config:        wrangler.toml + astro.config.mjs
+
+═══════════════════════════════════════════════════════════════════════════════
+KEY FILES & DIRECTORIES
+═══════════════════════════════════════════════════════════════════════════════
+
+src/data/products.ts         → SINGLE SOURCE OF TRUTH (product catalog)
+src/pages/                   → All routes (.astro files)
+src/components/              → Reusable UI components
+public/                      → Static assets (brand, products, images)
+tailwind.config.ts           → Design system (colors, typography, spacing)
+.github/workflows/           → GitHub Actions CI/CD pipelines
+.env.example                 → Documentation of required environment variables
+.claude/PROJECT_DIRECTIVE.md → Complete project requirements (READ THIS)
+
+═══════════════════════════════════════════════════════════════════════════════
+BEFORE EVERY COMMIT
+═══════════════════════════════════════════════════════════════════════════════
+
+□ TypeScript strict check:  npm run type-check (must be 0 errors)
+□ Build successfully:       npm run build (must pass)
+□ Lint passes:              npm run lint (must pass)
+□ No credentials in code:   grep -r "password\|secret\|token" src/ (should be env only)
+□ Git is clean:             git status (must show clean working tree)
+□ Commit message:           Descriptive, following: [type]: [description]
+
+═══════════════════════════════════════════════════════════════════════════════
+DEPLOYMENT (AUTOMATIC)
+═══════════════════════════════════════════════════════════════════════════════
+
+Push Targets:
+  main branch    → Auto-deploys to https://redwanmart.com (PRODUCTION)
+  develop branch → Auto-deploys to https://staging.redwanmart.com (STAGING)
+
+Time to Live:  2-3 minutes (via GitHub Actions → Cloudflare Pages)
+
+Manual Deployment:
+  Push any commit to main
+  OR use GitHub Actions workflow dispatch manually
+
+═══════════════════════════════════════════════════════════════════════════════
+QUICK COMMANDS
+═══════════════════════════════════════════════════════════════════════════════
+
+# Local development
+npm run dev           # Start dev server (http://localhost:3000)
+npm run build         # Build for production
+npm run preview       # Preview production build locally
+npm run type-check    # Check TypeScript (0 errors required)
+npm run lint          # Check code style
+npm run format        # Auto-format code
+
+# Git workflow
+git checkout develop
+git pull origin develop
+[make changes]
+git add .
+git commit -m "[type]: [description]"
+git push origin develop   # Test on staging first
+[verify at staging.redwanmart.com]
+git checkout main
+git pull origin main
+git merge develop
+git push origin main      # Deploy to production
+
+# Database (if needed)
+wrangler d1 execute app-db-production --command "SELECT * FROM products"
+
+═══════════════════════════════════════════════════════════════════════════════
+PRODUCT CATALOG (REQUIRED KNOWLEDGE)
+═══════════════════════════════════════════════════════════════════════════════
+
+All 6 products defined in: src/data/products.ts
+
+Products (all with placeholder prices – MUST CONFIRM BEFORE REAL ORDERS):
+  Q5047  Hero Block - Dark Knight Edition      ৳690 (placeholder)
+  F3029  Spidey Block - Web Edition            ৳650 (placeholder)
+  F3024  Hero Block - Shadow Symbiote Edition  ৳720 (placeholder)
+  F3022  Hero Block - Crimson Merc Edition     ৳690 (placeholder)
+  F3025  Hero Block - Star Captain Edition     ৳690 (placeholder)
+  Q5046  Spidey Block - Web Edition Micro      ৳580 (placeholder)
+
+To edit: src/data/products.ts → commit → push → auto-deploys in 2-3 min
+
+═══════════════════════════════════════════════════════════════════════════════
+BRAND COLORS (LOCKED)
+═══════════════════════════════════════════════════════════════════════════════
+
+Primary Red:   #CC2028 (brand.600) – Official Redwan Mart red
+Gold Accent:   #F0B850 (gold.400) – Official Redwan Mart gold
+
+All colors defined in: tailwind.config.ts
+
+DO NOT:
+  • Use different colors without approval
+  • Modify Tailwind color tokens
+  • Commit color changes without authorization
+
+═══════════════════════════════════════════════════════════════════════════════
+ENVIRONMENT VARIABLES (NEVER COMMIT)
+═══════════════════════════════════════════════════════════════════════════════
+
+Development (.env.local – GITIGNORED, never commit):
+  CF_ACCOUNT_ID, CF_API_TOKEN, CF_ZONE_ID
+  CF_R2_BUCKET_NAME, CF_R2_PUBLIC_URL
+  CF_D1_ID, CF_KV_NAMESPACE
+  HIGGSFIELD_API_KEY, HIGGSFIELD_WORKSPACE_ID
+  JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_ANALYTICS_TOKEN
+
+GitHub Secrets (for CI/CD deployment):
+  CLOUDFLARE_API_TOKEN (for deployment)
+  CLOUDFLARE_ACCOUNT_ID (for deployment)
+  SLACK_WEBHOOK_URL (optional)
+
+Cloudflare Runtime Secrets (for application):
+  JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_ANALYTICS_TOKEN
+
+RULE: Never commit .env.local or any secrets file. All secrets load from
+      environment variables ONLY.
+
+═══════════════════════════════════════════════════════════════════════════════
+SECURITY (ABSOLUTE REQUIREMENTS)
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ DO:
+   • Load all secrets from environment variables
+   • Use timing-safe password comparison
+   • Return 503 on missing secrets (fail-closed pattern)
+   • Set CORS headers to redwanmart.com origin only
+   • Enable CSP headers
+   • Use HTTPS only (Cloudflare handles)
+   • Rotate credentials regularly (90-day minimum)
+
+❌ DON'T:
+   • Hardcode credentials (EVER)
+   • Commit .env files
+   • Use default passwords
+   • Disable security headers
+   • Commit secrets to GitHub (even accidentally)
+   • Reuse compromised credentials (admin123, owner123 are COMPROMISED)
+
+═══════════════════════════════════════════════════════════════════════════════
+CONTINUOUS DEVELOPMENT AFTER LAUNCH
+═══════════════════════════════════════════════════════════════════════════════
+
+To add products:
+  1. Edit src/data/products.ts
+  2. Add image files to public/products/
+  3. Commit and push to main
+  4. Site auto-redeploys in 2-3 minutes ✅
+
+To update prices:
+  1. Edit price/compareAt in src/data/products.ts
+  2. Commit and push to main
+  3. Site auto-redeploys in 2-3 minutes ✅
+
+To change content:
+  1. Edit .astro files in src/pages/
+  2. Commit and push to main
+  3. Site auto-redeploys in 2-3 minutes ✅
+
+To test changes first:
+  1. Push to develop branch
+  2. Test at https://staging.redwanmart.com (2-3 minutes)
+  3. If good, merge develop into main
+  4. Production auto-deploys ✅
+
+═══════════════════════════════════════════════════════════════════════════════
+IF SOMETHING BREAKS
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Check GitHub Actions logs:
+   https://github.com/redwanmart/redwanmart.com/actions
+
+2. Verify TypeScript has no errors:
+   npm run type-check
+
+3. Check build locally:
+   npm run build
+   npm run preview
+
+4. Rollback if needed:
+   git revert <commit_hash>
+   git push origin main
+
+5. Check Cloudflare Pages deployment status:
+   https://dash.cloudflare.com → Pages → redwanmart
+
+═══════════════════════════════════════════════════════════════════════════════
+IMPORTANT LINKS
+═══════════════════════════════════════════════════════════════════════════════
+
+Repository:           https://github.com/redwanmart/redwanmart.com
+Production:           https://redwanmart.com
+Staging:              https://staging.redwanmart.com
+GitHub Actions:       https://github.com/redwanmart/redwanmart.com/actions
+Cloudflare Dashboard: https://dash.cloudflare.com
+
+Documentation:
+  .claude/PROJECT_DIRECTIVE.md  → Full requirements (READ FIRST)
+  GOING_LIVE.md                 → Deployment guide
+  QUICK_REFERENCE.md            → Common operations
+  MAINTENANCE.md                → Development guide
+  BUILD_STATUS.md               → Completion report
+  docs/API.md                   → API reference
+  docs/DEPLOYMENT.md            → Infrastructure setup
+
+═══════════════════════════════════════════════════════════════════════════════
+FINAL CHECKLIST BEFORE STARTING WORK
+═══════════════════════════════════════════════════════════════════════════════
+
+□ Have I read .claude/PROJECT_DIRECTIVE.md? (YES – REQUIRED)
+□ Am I working on redwanmart/redwanmart.com only? (YES)
+□ Is this for redwanmartbd@gmail.com Cloudflare account? (YES)
+□ Do I understand the technology stack? (YES)
+□ Will I only deploy to authorized targets? (YES)
+□ Do I know I cannot commit any secrets? (YES)
+□ Do I know TypeScript strict mode is required? (YES)
+□ Do I understand the product catalog is in src/data/products.ts? (YES)
+□ Will I run all checks before committing? (YES)
+□ Do I have no other competing projects? (YES)
+
+If ANY answer is NO → STOP and read .claude/PROJECT_DIRECTIVE.md again.
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ YOU ARE AUTHORIZED TO PROCEED WITH REDWAN MART DEVELOPMENT
+
+All guidance is in this file and PROJECT_DIRECTIVE.md.
+Follow strictly. No exceptions. No deviations.
+
+Questions? See MAINTENANCE.md or docs/ folder.
+
+═══════════════════════════════════════════════════════════════════════════════
