@@ -4,12 +4,45 @@ The Redwan Mart website is **100% complete and ready for production deployment**
 
 ---
 
+## 📦 Catalogue update (August 2026): 6 → 25 products
+
+The catalogue was expanded from 6 to 25 products, pulled from the product
+posters and detail sheets in the `Poster & details` Google Drive folder. Two
+new series were added — **Anime Block** (12 One Piece characters) and
+**Mini Block** (Mario/Luigi so far) — alongside 5 new **Hero Block** figures.
+
+**Nine cartoon items are documented but not yet live** because their source
+images in Drive are all larger than the 10 MB per-file cap on this session's
+Drive connector, and no smaller version exists yet:
+
+| Model | Character | Spec source |
+|---|---|---|
+| W2601-28 | Cinderella (Princess) | `Poster & details/cartoon/RAW` text doc |
+| W2601-21 | Bouncing Tiger | same |
+| W2601-43 | Mr. Krabs | same |
+| W2601-17 | Kitty (Powder Pink) | same |
+| W2601-18 | Kitty (Sky Blue) | same |
+| W2601-44 | SpongeBob SquarePants | same |
+| W2601-39 | Panda (Blue Edition) | same |
+| W2601-46 | Squidward | same |
+| W2601-48 | Pikachu | same |
+
+To add these once you have a smaller image (under ~9 MB, or any size if
+uploading a local file instead of pulling from Drive): resize to a square
+crop, export `id.jpg` (1200×1200), `id.webp` (1200×1200) and `id-sm.webp`
+(600×600) into `public/products/`, then add a matching entry to
+`src/data/products.ts` following the pattern of the other `Mini Block`
+products — full specs (piece count, size, SKU) are already in the Drive text
+doc above, ready to copy in.
+
+---
+
 ## ✅ What's Already Done
 
 - ✅ Complete frontend with all pages (homepage, products, search, about, 404)
-- ✅ Product catalog with 6 items fully integrated with real images
+- ✅ Product catalog with 25 items across 4 series, fully integrated with real images
 - ✅ Founder photo, brand assets, and product imagery all in place
-- ✅ Sitemap generation (10 URLs) – already submitted to search engines
+- ✅ Sitemap generation (29 URLs) – already submitted to search engines
 - ✅ Custom 404 error page with product suggestions
 - ✅ TypeScript strict mode enabled – 0 type errors
 - ✅ Responsive design – mobile-first, tested at 390px viewport

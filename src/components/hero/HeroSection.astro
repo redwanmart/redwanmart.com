@@ -3,6 +3,7 @@ import { products, featuredProducts, formatPrice } from '../../data/products';
 
 const [lead] = featuredProducts();
 const rest = products.filter((p) => p.id !== lead?.id).slice(0, 3);
+const total = products.length;
 ---
 
 <section class="relative overflow-hidden bg-surface-soft">
@@ -27,8 +28,8 @@ const rest = products.filter((p) => p.id !== lead?.id).slice(0, 3);
 
       <p class="mt-6 max-w-xl text-lg leading-relaxed text-ink-soft">
         Premium micro-brick collectibles, hand-checked in Dhaka and shipped
-        nationwide. Six figures in the range — every one of them a build worth
-        the evening it takes.
+        nationwide. {total} figures across four series — every one of them a
+        build worth the evening it takes.
       </p>
 
       <div class="mt-9 flex flex-wrap items-center gap-3">

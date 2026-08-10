@@ -4,8 +4,8 @@ import { products } from '../data/products';
 
 const values = [
   {
-    title: 'Small range, high bar',
-    body: 'Six figures, not six hundred. Everything in the catalogue is something we would put on our own shelf.',
+    title: 'Curated range, high bar',
+    body: 'A tight catalogue, not a flea market. Everything in it is something we would put on our own shelf.',
   },
   {
     title: 'Open about what we are',
@@ -25,6 +25,7 @@ const milestones = [
   { year: '2025', title: 'Enrolled at BUBT', body: 'Began a BBA at Bangladesh University of Business and Technology, Intake 65.' },
   { year: '2025', title: 'Redwan Mart begins', body: 'Started sourcing and reselling micro-brick hero figures to collectors in Dhaka.' },
   { year: '2026', title: 'redwanmart.com goes live', body: 'The catalogue moves online, built on Astro and Cloudflare’s edge platform.' },
+  { year: '2026', title: 'Range expands to four series', body: 'Added the Anime Block and Mini Block lines alongside Hero Block and Spidey Block.' },
 ];
 ---
 
@@ -101,16 +102,17 @@ const milestones = [
           <p>
             He runs the sourcing, the quality checks, the photography and the
             customer messages himself, alongside a full course load. The
-            catalogue stays at six figures because that is what one person can
-            stand behind properly.
+            catalogue only grows as fast as he can personally check it — every
+            one of the {products.length} figures now in stock is something he
+            has opened, counted and stood behind himself.
           </p>
         </div>
 
         <blockquote class="mt-9 rounded-2xl border-l-4 border-brand-600 bg-surface-soft p-7">
           <p class="font-heading text-xl leading-snug text-ink">
-            “I would rather sell six things properly than sixty things badly.
-            Every box that leaves here has been opened and checked — that is the
-            whole business model.”
+            “I would rather grow slowly and check every box myself than move
+            fast and lose track of what is inside them. That is the whole
+            business model.”
           </p>
           <footer class="mt-4 text-sm font-semibold text-ink-muted">
             — S. M. Redwan Ahmed, Founder &amp; Chief Executive
@@ -158,9 +160,9 @@ const milestones = [
         <p class="eyebrow">The range</p>
         <h2 class="mt-3 text-title">{products.length} figures, checked by hand.</h2>
         <p class="mt-5 text-lg leading-relaxed text-ink-soft">
-          Two series — Hero Block and Spidey Block — from 5.6 cm to 6.2 cm
-          finished height, all rated for builders aged 14 and up. Each box
-          contains the bricks and an illustrated assembly booklet.
+          Four series — Hero Block, Spidey Block, Anime Block and Mini Block —
+          all rated for builders aged 14 and up. Each box contains the bricks
+          and an illustrated assembly booklet.
         </p>
         <a href="/products" class="btn-primary mt-8">
           Browse the collection

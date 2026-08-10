@@ -5,8 +5,8 @@ import { products } from '../data/products';
 
 /**
  * The site is a static build, so the query string is not available at render
- * time. Every product is rendered up front and filtered in the browser — with
- * a six-item catalogue that is cheaper than a round trip to the API.
+ * time. Every product is rendered up front and filtered in the browser — a
+ * few dozen items is still cheaper than a round trip to the API.
  */
 const index = products.map((p) => ({
   id: p.id,
